@@ -4,20 +4,22 @@
 [ext_resource type="Texture2D" uid="uid://ct720m5onx1yg" path="res://Art/Backgroung/przykladowa.png" id="1_qqu20"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lquwl"]
-size = Vector2(710.88464, 1000.00037)
+size = Vector2(350.85046, 489.79608)
 
 [node name="Card" type="Node2D"]
-scale = Vector2(0.6, 0.6)
 script = ExtResource("1_du2ps")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-scale = Vector2(0.7, 0.7)
+scale = Vector2(0.34266666, 0.3426667)
 texture = ExtResource("1_qqu20")
 
 [node name="Area2D" type="Area2D" parent="."]
 scale = Vector2(0.7, 0.7)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
-position = Vector2(1.1901855, -0.00048828125)
-scale = Vector2(0.69999987, 0.69999987)
+position = Vector2(0.05951574, -2.7247834e-06)
+scale = Vector2(0.69999975, 0.69999975)
 shape = SubResource("RectangleShape2D_lquwl")
+
+[connection signal="mouse_entered" from="Area2D" to="." method="_on_area_2d_mouse_entered"]
+[connection signal="mouse_exited" from="Area2D" to="." method="_on_area_2d_mouse_exited"]
