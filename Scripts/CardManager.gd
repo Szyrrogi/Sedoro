@@ -1,92 +1,81 @@
 extends Node2D
 
+@onready var input_manager = $"../InputManager"
+@onready var hand = $"../Hand"
 
+const MAX_SELECTED_CARDS = 3
 
-var screen_size
-var card_being_dragged
-var player_hand_reference
+# Stan
+var dragged_card: Node2D = null
+var hovered_card: Node2D = null
 
-var id_hovering_on_card
+func _ready():
+	await get_tree().process_frame
+	input_manager.connect("card_left_clicked", _on_card_left_clicked)
+	input_manager.connect("card_right_clicked", _on_card_right_clicked) # NOWE
+	input_manager.connect("left_mouse_button_released", _on_left_release)
+	input_manager.connect("background_clicked", _on_background_clicked)
 
-func _ready() -> void:
-	screen_size = get_viewport_rect().size
-	#screen_size = Vector2(1920,1080)
-	player_hand_reference = $"../Hand"
-	$"../InputManager".connect("left_mouse_button_released", on_left_click_released)
+func _process(delta):
+	# 1. OBSŁUGA DRAG (Ruszanie kartą)
+	if dragged_card:
+		# Karta podąża za myszką
+		dragged_card.global_position = get_global_mouse_position()
+		# Opcjonalnie: Delikatne opóźnienie (lerp) dla płynności:
+		# dragged_card.global_position = lerp(dragged_card.global_position, get_global_mouse_position(), 25 * delta)
+		return # Jak ciągniemy, to nie sprawdzamy hovera
 
-func _process(delta: float) -> void:
-	if card_being_dragged:
-		var mouse_pos = get_global_mouse_position()
-		card_being_dragged.position = Vector2(clamp(mouse_pos.x,0,screen_size.x), clamp(mouse_pos.y,0,screen_size.y))
+	# 2. OBSŁUGA HOVER (Powiększanie po najechaniu)
+	# Pytamy InputManagera co jest pod myszką
+	var result = input_manager.raycast_at_cursor()
+	var new_hovered_card = null
+	
+	if result and result.collider.collision_mask == input_manager.COLLISION_MASK_CARD:
+		new_hovered_card = result.collider.get_parent()
+	
+	# Jeśli zmieniliśmy kartę nad którą jest myszka
+	if new_hovered_card != hovered_card:
+		if hovered_card:
+			hovered_card.set_hovered(false) # Stara maleje
+		if new_hovered_card:
+			new_hovered_card.set_hovered(true) # Nowa rośnie
+		hovered_card = new_hovered_card
 
-			
-			
-func start_drag(card):
-	card_being_dragged = card
-	card.scale = Vector2(1, 1)
-	
-func finish_drag():
-	if not card_being_dragged:
-		return
-	
-	card_being_dragged.scale = Vector2(1.05, 1.05)
-	player_hand_reference.add_card_to_hand(card_being_dragged)
-	card_being_dragged = null
-			
-func connect_card_signals(card):
-	card.connect("hovered", on_hovered_over_card)
-	card.connect("hovered_off", on_hovered_off_card)
-	
-func on_left_click_released():
-	if card_being_dragged:
-		finish_drag()
-	
-func on_hovered_over_card(card):
-	if !id_hovering_on_card:
-		id_hovering_on_card = true
-		highlight_card(card,true)
-	
-func on_hovered_off_card(card):
-	if !card_being_dragged:
-		highlight_card(card,false)
-		var new_card_hovered = raycast_check_for_card()
-		if new_card_hovered:
-			highlight_card(new_card_hovered, true)
-		else:
-			id_hovering_on_card = false
-	
-func highlight_card(card, hovered):
-	print(hovered)
-	if hovered:
-		card.scale = Vector2(1.05, 1.05)
-		card.z_index = 2
+# --- LEWY PRZYCISK (DRAG) ---
+func _on_card_left_clicked(card):
+	if card.get_parent() == hand: # Można ruszać tylko kartami z ręki
+		dragged_card = card
+		card.is_dragged = true # Wyłączamy fizykę powrotu w karcie
+		card.z_index = 100 # Wyciągamy na sam wierzch
+		card.set_hovered(false) # Reset skali, żeby nie wariowała przy dragu
+
+func _on_left_release():
+	if dragged_card:
+		dragged_card.is_dragged = false # Włączamy powrót na miejsce
+		dragged_card.z_index = 0 # Wracamy do warstwy
+		# Hand przeliczy Z-indexy poprawnie w następnej klatce jeśli trzeba
+		dragged_card = null
+
+# --- PRAWY PRZYCISK (SELECTION) ---
+func _on_card_right_clicked(card):
+	if card.get_parent() == hand:
+		toggle_card_selection(card)
+
+# --- LOGIKA ZAZNACZANIA (BEZ ZMIAN) ---
+func toggle_card_selection(card):
+	if card.is_selected:
+		card.set_selected(false)
 	else:
-		card.scale = Vector2(1, 1)
-		card.z_index = 1
-			
-func raycast_check_for_card():
-	var space_state = get_world_2d().direct_space_state 
-	var parameters = PhysicsPointQueryParameters2D.new()
-	parameters.position = get_global_mouse_position()
-	parameters.collide_with_areas = true
-	parameters.collision_mask = 1
-	
-	var result = space_state.intersect_point(parameters)
-	
-	if result.size() == 0:
-		return null
-	return get_card_with_highest_z_index(result)
-	return result[0].collider.get_parent()
-	
-func get_card_with_highest_z_index(cards):
-	var highest_z_card = cards[0].collider.get_parent()
-	var highest_z_index = highest_z_card.z_index
+		if get_selected_count() < MAX_SELECTED_CARDS:
+			card.set_selected(true)
+		else:
+			print("Limit kart!") # Tu dodaj dźwięk błędu
 
-	for i in range(1, cards.size()):
-		var current_card = cards[i].collider.get_parent()
-		if current_card.z_index > highest_z_index:
-			highest_z_card = current_card
-			highest_z_index = current_card.z_index
+func get_selected_count() -> int:
+	var count = 0
+	for c in hand.get_all_cards():
+		if c.is_selected: count += 1
+	return count
 
-	return highest_z_card
-	
+func _on_background_clicked():
+	pass # Opcjonalnie odznaczanie wszystkiego

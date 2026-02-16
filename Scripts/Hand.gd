@@ -1,46 +1,42 @@
 extends Node2D
 
-const CARD_WIDTH = 200
-const HAND_Y_POSITION = 880
+const CARD_WIDTH = 280.0
+const HAND_CURVE = 0.0 # Jeśli chcesz łuk, zmień np na 0.1
 
-var player_hand = []
-var center_screen_x
-# Called when the node enters the scene tree for the first time.
-func _ready() -> void:
-	center_screen_x = get_viewport().size.x /2
-	
-	
-	
-		
-func add_card_to_hand(card):
-	if card not in player_hand:
-		player_hand.insert(0, card)
-		update_hand_position()
-	else:
-		animate_card_to_position(card, card.starting_position)
-	
-	
-func update_hand_position():
-	for i in range(player_hand.size()):
-		var new_position = Vector2(calculate_card_position(i), HAND_Y_POSITION)
-		print(new_position)
-		var card = player_hand[i]
-		card.starting_position = new_position
-		animate_card_to_position(card, new_position)
-		
-func calculate_card_position(index):
-	var total_width = (player_hand.size() - 1) * CARD_WIDTH
-	var x_offset = center_screen_x + index * CARD_WIDTH - total_width / 2
-	return x_offset
-		#
-func animate_card_to_position(card, new_position):
-	var tween = get_tree().create_tween()
-	tween.tween_property(card, "position", new_position, 0.1)
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass
+func add_card(card: Node2D):
+	add_child(card)
+	# Ustawiamy kartę w pozycji 0,0 ręki, żeby animowała się z Decku
+	# (Ale logicznie jest już dzieckiem ręki)
+	recalculate_positions()
 
-func remove_card_fraom_hand(card):
-	if card in player_hand:
-		player_hand.erase(card)
-		update_hand_position()
+func remove_card(card: Node2D):
+	if card.get_parent() == self:
+		remove_child(card)
+	recalculate_positions()
+
+func get_all_cards() -> Array:
+	return get_children()
+
+func recalculate_positions():
+	var cards = get_children()
+	var card_count = cards.size()
+	
+	if card_count == 0:
+		return
+		
+	# Obliczamy szerokość całej ręki
+	var total_width = (card_count - 1) * CARD_WIDTH
+	var start_x = -total_width / 2.0
+	
+	for i in range(card_count):
+		var card = cards[i]
+		
+		# Obliczamy nową pozycję X
+		var new_x = start_x + (i * CARD_WIDTH)
+		
+		# Ustawiamy target_position w skrypcie Karty (Card.gd)
+		# Zakładamy, że Hand jest wyśrodkowany na ekranie w poziomie
+		card.target_position = Vector2(new_x, 0) 
+		
+		# Opcjonalnie: Rotacja
+		# card.rotation = (i - (card_count - 1) / 2.0) * 0.1
