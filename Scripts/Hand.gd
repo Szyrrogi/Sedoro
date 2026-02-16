@@ -1,6 +1,6 @@
 extends Node2D
 
-const CARD_WIDTH = 280.0
+const CARD_WIDTH = 330.0
 const HAND_CURVE = 0.0 # Jeśli chcesz łuk, zmień np na 0.1
 
 func add_card(card: Node2D):

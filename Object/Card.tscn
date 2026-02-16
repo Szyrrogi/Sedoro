@@ -1,26 +1,81 @@
-[gd_scene load_steps=4 format=3 uid="uid://d3uhxt5d8b6e0"]
+[gd_scene load_steps=6 format=3 uid="uid://d3uhxt5d8b6e0"]
 
 [ext_resource type="Script" uid="uid://dha8rdg557u1m" path="res://Scripts/Card.gd" id="1_du2ps"]
-[ext_resource type="Texture2D" uid="uid://ct720m5onx1yg" path="res://Art/Backgroung/przykladowa.png" id="1_qqu20"]
+[ext_resource type="Texture2D" uid="uid://d1wetgu7nmtjj" path="res://Art/Card/Card.png" id="2_du2ps"]
+[ext_resource type="Texture2D" uid="uid://wca2awkupqic" path="res://Art/Card/Art1.png" id="3_1xaqt"]
+[ext_resource type="Texture2D" uid="uid://co2hcc6ymaiom" path="res://Art/Card/division1.png" id="4_7yd01"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lquwl"]
-size = Vector2(514.2654, 722.44934)
+size = Vector2(602.0309, 871.42914)
 
 [node name="Card" type="Node2D"]
 position = Vector2(1747.99, 880)
 script = ExtResource("1_du2ps")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
-position = Vector2(-40.16171, -56.226395)
-scale = Vector2(0.5033135, 0.50331354)
-texture = ExtResource("1_qqu20")
+[node name="Ramka" type="Sprite2D" parent="."]
+position = Vector2(1.0100346, 0.9999809)
+scale = Vector2(0.3399571, 0.33995715)
+texture = ExtResource("2_du2ps")
+
+[node name="Art" type="Sprite2D" parent="Ramka"]
+show_behind_parent = true
+position = Vector2(-2.9415278, -308.8625)
+scale = Vector2(1.1168809, 1.1168809)
+texture = ExtResource("3_1xaqt")
+
+[node name="Pasek" type="Sprite2D" parent="Ramka"]
+position = Vector2(-2.9415476, 311.804)
+texture = ExtResource("4_7yd01")
+
+[node name="Name" type="RichTextLabel" parent="Ramka"]
+offset_left = -288.27167
+offset_top = -105.89569
+offset_right = 288.2718
+offset_bottom = -17.649109
+bbcode_enabled = true
+text = "[font_size=55][color=black]Kopniak"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="cost" type="RichTextLabel" parent="Ramka"]
+offset_left = -503.00482
+offset_top = -723.62054
+offset_right = -232.38226
+offset_bottom = -447.11517
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 24
+bbcode_enabled = true
+text = "[font_size=155][color=white]2"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Opis" type="RichTextLabel" parent="Ramka"]
+offset_left = -370.6352
+offset_top = -5.8830566
+offset_right = 364.75153
+offset_bottom = 276.5056
+bbcode_enabled = true
+text = "[font_size=55][color=black]Zadaj [font_size=65]6 [font_size=55]obrażeń"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Name4" type="RichTextLabel" parent="Ramka"]
+offset_left = -376.5183
+offset_top = 376.51807
+offset_right = 379.45972
+offset_bottom = 544.1863
+bbcode_enabled = true
+text = "[font_size=55][color=black]Zadaj [font_size=65]3 [font_size=55]obrażeń"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Area2D" type="Area2D" parent="."]
+visible = false
 scale = Vector2(0.7, 0.7)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
-position = Vector2(-57.135742, -81.42859)
-scale = Vector2(0.6999996, 0.6999996)
+position = Vector2(0.73217773, -2.1429443)
+scale = Vector2(0.6999995, 0.6999995)
 shape = SubResource("RectangleShape2D_lquwl")
 
 [connection signal="mouse_entered" from="Area2D" to="." method="_on_area_2d_mouse_entered"]
