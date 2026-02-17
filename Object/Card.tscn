@@ -1,21 +1,28 @@
-[gd_scene load_steps=6 format=3 uid="uid://d3uhxt5d8b6e0"]
+[gd_scene load_steps=7 format=3 uid="uid://d3uhxt5d8b6e0"]
 
 [ext_resource type="Script" uid="uid://dha8rdg557u1m" path="res://Scripts/Card.gd" id="1_du2ps"]
 [ext_resource type="Texture2D" uid="uid://d1wetgu7nmtjj" path="res://Art/Card/Card.png" id="2_du2ps"]
 [ext_resource type="Texture2D" uid="uid://wca2awkupqic" path="res://Art/Card/Art1.png" id="3_1xaqt"]
+[ext_resource type="Script" uid="uid://c75my13pviyvb" path="res://Object/SetUpCard.gd" id="3_7yd01"]
 [ext_resource type="Texture2D" uid="uid://co2hcc6ymaiom" path="res://Art/Card/division1.png" id="4_7yd01"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lquwl"]
 size = Vector2(602.0309, 871.42914)
 
-[node name="Card" type="Node2D"]
+[node name="Card" type="Node2D" node_paths=PackedStringArray("frame")]
 position = Vector2(1747.99, 880)
 script = ExtResource("1_du2ps")
+frame = NodePath("Ramka")
 
-[node name="Ramka" type="Sprite2D" parent="."]
+[node name="Ramka" type="Sprite2D" parent="." node_paths=PackedStringArray("cost_label", "name_label", "description_label", "art_label")]
 position = Vector2(1.0100346, 0.9999809)
 scale = Vector2(0.3399571, 0.33995715)
 texture = ExtResource("2_du2ps")
+script = ExtResource("3_7yd01")
+cost_label = NodePath("cost")
+name_label = NodePath("Name")
+description_label = NodePath("Opis")
+art_label = NodePath("Art")
 
 [node name="Art" type="Sprite2D" parent="Ramka"]
 show_behind_parent = true

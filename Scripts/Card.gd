@@ -5,6 +5,8 @@ var is_selected: bool = false
 var is_dragged: bool = false # Czy gracz ją trzyma?
 var is_hovered: bool = false # Czy myszka jest nad nią?
 
+@export var frame: Node2D
+
 var target_position: Vector2 = Vector2.ZERO
 
 # --- USTAWIENIA WIZUALNE ---
@@ -41,9 +43,11 @@ func _process(delta):
 	# LOGIKA SKALI (Lerp dla płynnego powiększania)
 	var target_scale = SCALE_HOVER if is_hovered else SCALE_NORMAL
 	scale = scale.lerp(target_scale, 20 * delta)
-
+	
 func setup_card(_id: int):
 	id = _id
+	frame.set_up(_id)
+	print("siema")
 #	Tu będzie się uzupełniać
 
 # --- PUBLICZNE METODY ---
