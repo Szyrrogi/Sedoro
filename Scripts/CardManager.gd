@@ -5,7 +5,6 @@ extends Node2D
 
 @onready var arrow_sprite: Sprite2D = $ArrowSprite
 
-const MAX_SELECTED_CARDS = 3
 const DRAG_DELAY: float = 0.1
 const MIN_ARROW_DISTANCE: float = 120
 
@@ -199,10 +198,7 @@ func toggle_card_selection(card):
 	if card.is_selected:
 		card.set_selected(false)
 	else:
-		if get_selected_count() < MAX_SELECTED_CARDS:
-			card.set_selected(true)
-		else:
-			print("Limit kart!") 
+		card.set_selected(true)
 
 func get_selected_count() -> int:
 	var count = 0
