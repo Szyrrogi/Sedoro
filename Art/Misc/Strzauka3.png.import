@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dh5pmnobyuurf"
-path="res://.godot/imported/BackgroundUp1.png-ae7be0c27c283671fec142c09e4fd529.ctex"
+uid="uid://dksywetue4wm0"
+path="res://.godot/imported/Strzauka3.png-87c0ad2cb8da95385654a339e8822417.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Art/Backgroung/BackgroundUp1.png"
-dest_files=["res://.godot/imported/BackgroundUp1.png-ae7be0c27c283671fec142c09e4fd529.ctex"]
+source_file="res://Art/Misc/Strzauka3.png"
+dest_files=["res://.godot/imported/Strzauka3.png-87c0ad2cb8da95385654a339e8822417.ctex"]
 
 [params]
 

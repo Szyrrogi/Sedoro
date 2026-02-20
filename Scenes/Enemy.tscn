@@ -1,0 +1,26 @@
+[gd_scene load_steps=5 format=3 uid="uid://ckx1a5k12nwo2"]
+
+[ext_resource type="Texture2D" uid="uid://dbqlgbbmlq1d3" path="res://Art/Enemy/enemy_test.png" id="1_m1htj"]
+[ext_resource type="Script" uid="uid://021as5ev2a7a" path="res://Scenes/enemy.gd" id="1_wovta"]
+[ext_resource type="AudioStream" uid="uid://bibt8x1d1xt5n" path="res://Art/SFX/Video-Project-2.mp3" id="3_xeo28"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wovta"]
+size = Vector2(1356, 606)
+
+[node name="Enemy" type="Node2D"]
+script = ExtResource("1_wovta")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(-18.000015, -57.000004)
+scale = Vector2(1.0187829, 0.93087554)
+texture = ExtResource("1_m1htj")
+
+[node name="Area2D" type="Area2D" parent="."]
+collision_layer = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+position = Vector2(-18, -57)
+shape = SubResource("RectangleShape2D_wovta")
+
+[node name="HitSound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("3_xeo28")

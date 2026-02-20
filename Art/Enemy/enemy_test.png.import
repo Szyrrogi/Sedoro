@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ct720m5onx1yg"
-path="res://.godot/imported/przykladowa.png-4f1909e5d0fd1e6b03346ed3a3dbe419.ctex"
+uid="uid://dbqlgbbmlq1d3"
+path="res://.godot/imported/enemy_test.png-b5633425513e042b94a6c716ee5f179e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Art/Backgroung/przykladowa.png"
-dest_files=["res://.godot/imported/przykladowa.png-4f1909e5d0fd1e6b03346ed3a3dbe419.ctex"]
+source_file="res://Art/Enemy/enemy_test.png"
+dest_files=["res://.godot/imported/enemy_test.png-b5633425513e042b94a6c716ee5f179e.ctex"]
 
 [params]
 
