@@ -2,6 +2,8 @@ extends Node2D
 
 @onready var input_manager = $"../InputManager"
 @onready var hand = $"../Hand"
+@onready var discard = $"../Background/Discard"
+@onready var game_manager = $"../GameManager"
 
 @onready var arrow_sprite: Sprite2D = $ArrowSprite
 
@@ -120,7 +122,11 @@ func finish_targeting():
 	if target_enemy:
 		print("TRAFIONO PRZECIWNIKA: ", target_enemy.name)
 		if target_enemy.has_method("take_damage"):
-			target_enemy.take_damage()
+			game_manager.mana -= int(hovered_card.cost)
+			target_enemy.take(hovered_card)
+			discard.add_to_discard(hovered_card)
+			hand.recalculate_positions()
+			#target_enemy.take_damage()
 	else:
 		# Jeśli chcesz sprawdzić czy trafiono inną kartę, zrób to tutaj
 		print("Strzelono w puste pole.")
@@ -178,7 +184,8 @@ func _on_left_release():
 	# To jest Twój KLIK - włącza tryb celowania strzałką!
 	if held_card and not dragged_card:
 		print("Karta kliknięta!")
-		start_targeting(held_card)
+		if held_card.cost <= game_manager.mana:
+			start_targeting(held_card)
 
 	# Puszczanie karty po przeciąganiu
 	if dragged_card:

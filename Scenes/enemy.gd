@@ -13,6 +13,11 @@ func _ready():
 		health_bar.max_value = max_health 
 		health_bar.value = current_health
 
+func take(card: Node2D):
+	print(card.effect)
+	if card.effect[0] == 0:
+		take_damage(card.effect[1])
+
 func take_damage(amount: int = 10):
 	current_health -= amount
 	

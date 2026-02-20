@@ -3,7 +3,7 @@ extends Node2D
 @export var card_scene: PackedScene 
 @export var discard_ref: Node2D # PRZYPISZ TU DISCARD W INSPEKTORZE!
 
-var deck_data = [1, 1, 1, 0, 0, 0, 0] # Przykładowe dane startowe
+var deck_data = [1, 1, 1, 2, 2, 2, 0, 0] # Przykładowe dane startowe
 var card_database_reference = preload("res://Scripts/CardDatabase.gd")
 
 func _ready():

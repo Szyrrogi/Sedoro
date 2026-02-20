@@ -14,7 +14,7 @@ position = Vector2(1747.99, 880)
 script = ExtResource("1_du2ps")
 frame = NodePath("Ramka")
 
-[node name="Ramka" type="Sprite2D" parent="." node_paths=PackedStringArray("cost_label", "name_label", "description_label", "art_label")]
+[node name="Ramka" type="Sprite2D" parent="." node_paths=PackedStringArray("cost_label", "name_label", "description_label", "description2_label", "art_label", "separation_label")]
 position = Vector2(1.0100346, 0.9999809)
 scale = Vector2(0.3399571, 0.33995715)
 texture = ExtResource("2_du2ps")
@@ -22,7 +22,9 @@ script = ExtResource("3_7yd01")
 cost_label = NodePath("cost")
 name_label = NodePath("Name")
 description_label = NodePath("Opis")
+description2_label = NodePath("Opis2")
 art_label = NodePath("Art")
+separation_label = NodePath("Pasek")
 
 [node name="Art" type="Sprite2D" parent="Ramka"]
 show_behind_parent = true
@@ -66,7 +68,7 @@ text = "[font_size=55][color=black]Zadaj [font_size=65]6 [font_size=55]obrażeń
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Name4" type="RichTextLabel" parent="Ramka"]
+[node name="Opis2" type="RichTextLabel" parent="Ramka"]
 offset_left = -376.5183
 offset_top = 376.51807
 offset_right = 379.45972

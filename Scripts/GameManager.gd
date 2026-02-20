@@ -5,6 +5,7 @@ extends Node
 @export var hand: Node2D
 @export var discard: Node2D
 @export var end_turn_button: Button
+@export var mana_text: RichTextLabel
 
 # Prosta maszyna stanów
 enum State { PLAYER_START, PLAYER_ACTION, ENEMY_TURN }
@@ -12,6 +13,9 @@ var current_state = State.PLAYER_START
 
 const HAND_LIMIT = 5
 const CARDS_PER_TURN = 3
+const MAX_MANA = 8
+
+var mana = 5
 
 func _ready():
 	# Czekamy chwilę na start gry, żeby wszystko się załadowało
@@ -19,6 +23,11 @@ func _ready():
 		end_turn_button.pressed.connect(_on_end_turn_button_pressed)
 	await get_tree().create_timer(0.5).timeout
 	start_player_turn()
+	
+func _process(delta):
+	mana_text.text = mana + "/" + MAX_MANA
+	
+	
 func _on_end_turn_button_pressed():
 	# Dla bezpieczeństwa sprawdzamy czy to na pewno faza akcji
 	if current_state == State.PLAYER_ACTION:

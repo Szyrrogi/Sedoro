@@ -6,6 +6,7 @@ var is_dragged: bool = false # Czy gracz ją trzyma?
 var is_hovered: bool = false # Czy myszka jest nad nią?
 
 @export var frame: Node2D
+const CardDatabase = preload("res://Scripts/CardDatabase.gd")
 
 var target_position: Vector2 = Vector2.ZERO
 
@@ -16,6 +17,8 @@ const COLOR_SELECTED = Color(0.6, 1.0, 0.6) # Zielonkawy
 const COLOR_NORMAL = Color.WHITE
 
 var id: int = 0
+var effect
+var cost
 
 func _ready():
 	# Ważne: Żeby raycast trafiał w kartę, Area2D musi być w tej warstwie
@@ -46,8 +49,10 @@ func _process(delta):
 	
 func setup_card(_id: int):
 	id = _id
+	effect = CardDatabase.CARDS[_id][6]
+	cost = CardDatabase.CARDS[_id][1]
 	frame.set_up(_id)
-	print("siema")
+	print(effect)
 #	Tu będzie się uzupełniać
 
 # --- PUBLICZNE METODY ---

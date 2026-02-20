@@ -9,7 +9,7 @@
 [ext_resource type="Script" uid="uid://6cb8fvhsqqxy" path="res://Scripts/Discard.gd" id="5_hptm8"]
 [ext_resource type="Script" uid="uid://ddv4xrav0k0nn" path="res://Scripts/CardManager.gd" id="6_6iyac"]
 [ext_resource type="Script" uid="uid://bis87dtjlud6o" path="res://Scripts/Hand.gd" id="8_344ge"]
-[ext_resource type="Script" path="res://Scenes/GameManager.gd" id="9_hptm8"]
+[ext_resource type="Script" uid="uid://d1cut2x4sevqo" path="res://Scenes/GameManager.gd" id="9_hptm8"]
 [ext_resource type="Texture2D" uid="uid://ct720m5onx1yg" path="res://Art/Background/przykladowa.png" id="9_ynf5e"]
 [ext_resource type="Texture2D" uid="uid://27mhuwaghgc0" path="res://Art/Misc/Strzauka6.png" id="10_fdnlq"]
 [ext_resource type="PackedScene" uid="uid://ckx1a5k12nwo2" path="res://Scenes/Enemy.tscn" id="12_6iyac"]
@@ -92,12 +92,13 @@ position = Vector2(899.29, 905)
 scale = Vector2(0.6, 0.6)
 script = ExtResource("8_344ge")
 
-[node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("deck", "hand", "discard", "end_turn_button")]
+[node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("deck", "hand", "discard", "end_turn_button", "mana_text")]
 script = ExtResource("9_hptm8")
 deck = NodePath("../Background/Deck")
 hand = NodePath("../Hand")
 discard = NodePath("../Background/Discard")
 end_turn_button = NodePath("../CanvasLayer/EndTurnButton")
+mana_text = NodePath("../CanvasLayer/ManaText")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -107,6 +108,14 @@ offset_top = 57.0
 offset_right = 187.0
 offset_bottom = 117.0
 text = "Next Turn "
+
+[node name="ManaText" type="RichTextLabel" parent="CanvasLayer"]
+offset_left = 300.0
+offset_top = 950.0
+offset_right = 431.0
+offset_bottom = 1052.0
+bbcode_enabled = true
+text = "[font_size=75]6/6"
 
 [node name="Enemy" parent="." instance=ExtResource("12_6iyac")]
 position = Vector2(993, 475)
