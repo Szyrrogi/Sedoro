@@ -1,26 +1,42 @@
 extends Node2D
 
+@export var max_health: int = 30 
+var current_health: int
 
-# Called when the node enters the scene tree for the first time.
-func _ready() -> void:
-	pass # Replace with function body.
-
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass
+@export var health_bar = TextureProgressBar
+@onready var hit_sound: AudioStreamPlayer2D = $HitSound
 
 
-# Znajdujemy nasz głośnik
-@onready var hit_sound = $HitSound
+func _ready():
+	current_health = max_health
+	if health_bar:
+		health_bar.max_value = max_health 
+		health_bar.value = current_health
 
-# Ta funkcja zostanie wywołana przez CardManager, gdy trafi go strzałka
-func take_damage():
-	print("Ała! Dostałem!")
+func take_damage(amount: int = 10):
+	current_health -= amount
 	
-	# Jeśli mamy dźwięk, odtwórz go
+	# ODTWARZANIE DŹWIĘKU TRAFIENIA
 	if hit_sound:
 		hit_sound.play()
 		
-	# Tu możesz dodać też animację, np.:
-	# scale = Vector2(0.9, 0.9) # Przeciwnik się kuli z bólu
+	if health_bar:
+		health_bar.value = current_health
+		
+	if current_health <= 0:
+		die()
+
+func die():
+	print("Przeciwnik pokonany!")
+	
+	# 1. Ukrywamy wroga i wyłączamy jego kolizję, żeby nie blokował kolejnych strzałek
+	visible = false
+	$Area2D.set_deferred("monitorable", false) 
+	$Area2D.set_deferred("monitoring", false)
+	
+	# 2. Czekamy aż dźwięk skończy grać (jeśli w ogóle gra)
+	if hit_sound and hit_sound.playing:
+		await hit_sound.finished
+		
+	# 3. Dopiero teraz usuwamy wroga na dobre
+	queue_free()
