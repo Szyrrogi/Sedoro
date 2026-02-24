@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://cj07e7tcxt8aw"]
+[gd_scene load_steps=17 format=3 uid="uid://cj07e7tcxt8aw"]
 
 [ext_resource type="Texture2D" uid="uid://dh5pmnobyuurf" path="res://Art/Background/BackgroundUp1.png" id="2_344ge"]
 [ext_resource type="Script" uid="uid://deppbi7l0j7k7" path="res://Scripts/Deck.gd" id="3_344ge"]
@@ -13,6 +13,8 @@
 [ext_resource type="Texture2D" uid="uid://ct720m5onx1yg" path="res://Art/Background/przykladowa.png" id="9_ynf5e"]
 [ext_resource type="Texture2D" uid="uid://27mhuwaghgc0" path="res://Art/Misc/Strzauka6.png" id="10_fdnlq"]
 [ext_resource type="PackedScene" uid="uid://ckx1a5k12nwo2" path="res://Scenes/Enemy.tscn" id="12_6iyac"]
+[ext_resource type="Script" uid="uid://cr4jpy03ksr4o" path="res://Scripts/ManaManager.gd" id="14_wsu2k"]
+[ext_resource type="Texture2D" uid="uid://ddidnxwdxqqij" path="res://Art/Icon/Mana/Mana2.png" id="15_k12tt"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hptm8"]
 size = Vector2(191, 269)
@@ -92,13 +94,13 @@ position = Vector2(899.29, 905)
 scale = Vector2(0.6, 0.6)
 script = ExtResource("8_344ge")
 
-[node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("deck", "hand", "discard", "end_turn_button", "mana_text")]
+[node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("deck", "hand", "discard", "end_turn_button", "mana_manager")]
 script = ExtResource("9_hptm8")
 deck = NodePath("../Background/Deck")
 hand = NodePath("../Hand")
 discard = NodePath("../Background/Discard")
 end_turn_button = NodePath("../CanvasLayer/EndTurnButton")
-mana_text = NodePath("../CanvasLayer/ManaText")
+mana_manager = NodePath("../ManaManager")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -119,3 +121,18 @@ text = "[font_size=75]6/6"
 
 [node name="Enemy" parent="." instance=ExtResource("12_6iyac")]
 position = Vector2(993, 475)
+
+[node name="ManaManager" type="Node2D" parent="." node_paths=PackedStringArray("mana_sprite", "mana2_sprite")]
+script = ExtResource("14_wsu2k")
+mana_sprite = NodePath("Mana1")
+mana2_sprite = NodePath("Mana2")
+
+[node name="Mana2" type="Sprite2D" parent="ManaManager"]
+position = Vector2(105, 539)
+scale = Vector2(0.2089258, 0.2089258)
+texture = ExtResource("15_k12tt")
+
+[node name="Mana1" type="Sprite2D" parent="ManaManager"]
+position = Vector2(105, 380.16)
+scale = Vector2(0.2089258, 0.2089258)
+texture = ExtResource("15_k12tt")
