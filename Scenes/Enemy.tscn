@@ -10,9 +10,10 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wovta"]
 size = Vector2(1356, 606)
 
-[node name="Enemy" type="Node2D" node_paths=PackedStringArray("health_bar")]
+[node name="Enemy" type="Node2D" node_paths=PackedStringArray("health_bar", "armor_label")]
 script = ExtResource("1_wovta")
 health_bar = NodePath("Area2D/TextureProgressBar")
+armor_label = NodePath("RichTextLabel")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 position = Vector2(-18.000015, -57.000004)
@@ -39,3 +40,11 @@ texture_progress_offset = Vector2(6, 15)
 
 [node name="HitSound" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource("3_xeo28")
+
+[node name="RichTextLabel" type="RichTextLabel" parent="."]
+offset_left = 393.0
+offset_top = -535.0
+offset_right = 623.0
+offset_bottom = -314.0
+bbcode_enabled = true
+text = "[font_size=155][color=white]3"

@@ -25,6 +25,8 @@ var hold_timer: float = 0.0
 var targeting_card: Node2D = null
 var screen_size: Vector2
 
+@export var player: Node2D
+
 func _ready():
 	await get_tree().process_frame
 	screen_size = get_viewport_rect().size
@@ -129,7 +131,7 @@ func start_targeting(card):
 
 func finish_targeting():
 	# --- ROZDZIELENIE LOGIKI ZE WZGLĘDU NA TYP KARTY ---
-	if targeting_card.put_type == 0:
+	if targeting_card.put_type != 1:
 		# 1. KARTA CELOWANA W PRZECIWNIKA (np. Atak)
 		var target_enemy = hovering_enemy_check()
 		
@@ -149,8 +151,8 @@ func finish_targeting():
 		# Taka karta rzuca swój efekt po prostu po kliknięciu myszką gdziekolwiek
 		print("ZAGRANO KARTĘ GLOBALNĄ / NA GRACZA: ", targeting_card.name)
 		game_manager.mana -= int(targeting_card.cost)
-		
-		# ---> TUTAJ DODAJ SWOJĄ LOGIKĘ EFEKTU <---
+		player.take(targeting_card)
+		# ---> TUTAJ DODAJ SWOJĄ LOGIKĘ EFEKTU <---put_type
 		# Np.: game_manager.player.heal(targeting_card.effect)
 		
 		discard.add_to_discard(targeting_card)

@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3 uid="uid://cj07e7tcxt8aw"]
+[gd_scene load_steps=18 format=3 uid="uid://cj07e7tcxt8aw"]
 
 [ext_resource type="Texture2D" uid="uid://dh5pmnobyuurf" path="res://Art/Background/BackgroundUp1.png" id="2_344ge"]
 [ext_resource type="Script" uid="uid://deppbi7l0j7k7" path="res://Scripts/Deck.gd" id="3_344ge"]
@@ -16,7 +16,6 @@
 [ext_resource type="Script" uid="uid://cr4jpy03ksr4o" path="res://Scripts/ManaManager.gd" id="14_wsu2k"]
 [ext_resource type="Texture2D" uid="uid://ddidnxwdxqqij" path="res://Art/Icon/Mana/Mana2.png" id="15_k12tt"]
 [ext_resource type="PackedScene" uid="uid://blplkuxn65mic" path="res://Scenes/Character.tscn" id="16_k12tt"]
-[ext_resource type="Script" uid="uid://dhreaeaovlfgu" path="res://Scenes/character.gd" id="17_h1bgf"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hptm8"]
 size = Vector2(191, 269)
@@ -81,8 +80,9 @@ position = Vector2(899.00006, 905)
 scale = Vector2(0.6, 0.6)
 script = ExtResource("5_d1ilt")
 
-[node name="CardManager" type="Node2D" parent="."]
+[node name="CardManager" type="Node2D" parent="." node_paths=PackedStringArray("player")]
 script = ExtResource("6_6iyac")
+player = NodePath("../Character")
 
 [node name="ArrowSprite" type="Sprite2D" parent="CardManager"]
 visible = false
@@ -96,13 +96,15 @@ position = Vector2(899.29, 905)
 scale = Vector2(0.6, 0.6)
 script = ExtResource("8_344ge")
 
-[node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("deck", "hand", "discard", "end_turn_button", "mana_manager")]
+[node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("deck", "hand", "discard", "end_turn_button", "mana_manager", "player", "enemies")]
 script = ExtResource("9_hptm8")
 deck = NodePath("../Background/Deck")
 hand = NodePath("../Hand")
 discard = NodePath("../Background/Discard")
 end_turn_button = NodePath("../CanvasLayer/EndTurnButton")
 mana_manager = NodePath("../ManaManager")
+player = NodePath("../Character")
+enemies = [NodePath("../Enemy")]
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -113,17 +115,10 @@ offset_right = 187.0
 offset_bottom = 117.0
 text = "Next Turn "
 
-[node name="ManaText" type="RichTextLabel" parent="CanvasLayer"]
-offset_left = 300.0
-offset_top = 950.0
-offset_right = 431.0
-offset_bottom = 1052.0
-bbcode_enabled = true
-text = "[font_size=75]6/6"
-
-[node name="Enemy" parent="." instance=ExtResource("12_6iyac")]
+[node name="Enemy" parent="." node_paths=PackedStringArray("player") instance=ExtResource("12_6iyac")]
 position = Vector2(1458, 518)
 scale = Vector2(0.6, 0.6)
+player = NodePath("../Character")
 
 [node name="ManaManager" type="Node2D" parent="." node_paths=PackedStringArray("mana_sprite", "mana2_sprite")]
 script = ExtResource("14_wsu2k")
@@ -143,4 +138,3 @@ texture = ExtResource("15_k12tt")
 [node name="Character" parent="." instance=ExtResource("16_k12tt")]
 position = Vector2(563, 544)
 scale = Vector2(0.5, 0.5)
-script = ExtResource("17_h1bgf")

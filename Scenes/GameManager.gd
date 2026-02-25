@@ -6,6 +6,8 @@ extends Node
 @export var discard: Node2D
 @export var end_turn_button: Button
 @export var mana_manager: Node2D
+@export var player: Node2D
+@export var enemies: Array[Node]
 
 # Prosta maszyna stanów
 enum State { PLAYER_START, PLAYER_ACTION, ENEMY_TURN }
@@ -36,6 +38,7 @@ func start_player_turn():
 	current_state = State.PLAYER_START
 	print("\n--- POCZĄTEK TURY GRACZA ---")
 	mana = MANA_MAX
+	player.start_tunr()
 	# --- LOGIKA DOBIERANIA ---
 	var current_hand_size = hand.get_child_count()
 	
@@ -66,7 +69,7 @@ func start_player_turn():
 func end_player_turn():
 	if current_state != State.PLAYER_ACTION:
 		return
-		
+	
 	print("Koniec tury gracza. Czas na sprzątanie...")
 	
 	# Kopiujemy listę kart
@@ -88,8 +91,10 @@ func end_player_turn():
 func start_enemy_turn():
 	current_state = State.ENEMY_TURN
 	print("Tura przeciwnika...")
-	
-	await get_tree().create_timer(1.5).timeout
+	for enemy in enemies:
+		enemy.action()
+		await get_tree().create_timer(1).timeout
+	await get_tree().create_timer(1).timeout
 	
 	print("Przeciwnik zakończył ruch.")
 	start_player_turn()

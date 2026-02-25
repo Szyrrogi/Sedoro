@@ -1,47 +1,43 @@
-extends Node2D
+extends Character
 
-@export var max_health: int = 30 
-var current_health: int
+@export var player: Node2D
+const CardDatabase = preload("res://Scripts/CardDatabase.gd")
+var deck_data = [1, 2]
 
-@export var health_bar = TextureProgressBar
-@onready var hit_sound: AudioStreamPlayer2D = $HitSound
+func action():
+	if deck_data.is_empty():
+		print("Przeciwnik nie ma już kart w talii!")
+		return
+		
+	deck_data.shuffle() 
+	var card_id = deck_data.pop_front() 
 
-
-func _ready():
-	current_health = max_health
-	if health_bar:
-		health_bar.max_value = max_health 
-		health_bar.value = current_health
-
-func take(card: Node2D):
-	print(card.effect)
-	if card.effect[0] == 0:
-		take_damage(card.effect[1])
-
-func take_damage(amount: int = 10):
-	current_health -= amount
+	var card_data = CardDatabase.CARDS[card_id] # Pamiętaj o dobrej ścieżce/nazwie Singletona Bazy
+	var card_name = card_data[0]
+	var put_type = card_data[5]
+	var effect_data = card_data[6]
 	
-	# ODTWARZANIE DŹWIĘKU TRAFIENIA
-	if hit_sound:
-		hit_sound.play()
+	print("Przeciwnik zagrywa kartę: ", card_name)
+
+	var virtual_card = {
+		"effect": effect_data
+	}
+
+	if put_type == 0:
+		print("Przeciwnik atakuje Gracza!")
+		player.take(virtual_card)
 		
-	if health_bar:
-		health_bar.value = current_health
-		
-	if current_health <= 0:
-		die()
+	elif put_type == 1:
+		print("Przeciwnik używa karty na sobie!")
+		self.take(virtual_card)
 
 func die():
 	print("Przeciwnik pokonany!")
-	
-	# 1. Ukrywamy wroga i wyłączamy jego kolizję, żeby nie blokował kolejnych strzałek
 	visible = false
-	$Area2D.set_deferred("monitorable", false) 
+	$Area2D.set_deferred("monitorable", false)
 	$Area2D.set_deferred("monitoring", false)
 	
-	# 2. Czekamy aż dźwięk skończy grać (jeśli w ogóle gra)
 	if hit_sound and hit_sound.playing:
 		await hit_sound.finished
 		
-	# 3. Dopiero teraz usuwamy wroga na dobre
 	queue_free()
