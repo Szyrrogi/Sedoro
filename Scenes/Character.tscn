@@ -1,0 +1,42 @@
+[gd_scene load_steps=8 format=3 uid="uid://blplkuxn65mic"]
+
+[ext_resource type="Script" uid="uid://021as5ev2a7a" path="res://Scenes/enemy.gd" id="1_xloa1"]
+[ext_resource type="Texture2D" uid="uid://b8qxw8sdlkhwv" path="res://Art/Enemy/ludzik.png" id="2_xloa1"]
+[ext_resource type="Texture2D" uid="uid://dy20rr06h88yu" path="res://Art/Misc/HP3.png" id="3_peemv"]
+[ext_resource type="Texture2D" uid="uid://cnkvfweuow6o5" path="res://Art/Misc/HP2.png" id="4_omicx"]
+[ext_resource type="Texture2D" uid="uid://g8vqqr0y2dlb" path="res://Art/Misc/HP0.png" id="5_8au8k"]
+[ext_resource type="AudioStream" uid="uid://bibt8x1d1xt5n" path="res://Art/SFX/Video-Project-2.mp3" id="6_p3cti"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wovta"]
+size = Vector2(154, 223)
+
+[node name="Enemy" type="Node2D" node_paths=PackedStringArray("health_bar")]
+script = ExtResource("1_xloa1")
+health_bar = NodePath("Area2D/TextureProgressBar")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(-17.500004, -56.000004)
+scale = Vector2(3.0460527, 2.8067229)
+texture = ExtResource("2_xloa1")
+
+[node name="Area2D" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 8
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+position = Vector2(-18, -56.5)
+scale = Vector2(3, 3)
+shape = SubResource("RectangleShape2D_wovta")
+
+[node name="TextureProgressBar" type="TextureProgressBar" parent="Area2D"]
+offset_left = -409.0
+offset_top = -547.0
+offset_right = 383.0
+offset_bottom = -486.0
+texture_under = ExtResource("3_peemv")
+texture_over = ExtResource("4_omicx")
+texture_progress = ExtResource("5_8au8k")
+texture_progress_offset = Vector2(6, 15)
+
+[node name="HitSound" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource("6_p3cti")

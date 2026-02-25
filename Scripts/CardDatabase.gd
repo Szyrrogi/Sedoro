@@ -9,6 +9,7 @@ const CARDS = {
 	0 : ["Kopniak", 2, "0", "Zadaj 4 obrażenia", [1,"Zdaj 2 obrażenia", [0,2]], 0, [0, 4]],
 	1 : ["Punch", 1, "1", "Zadaj 1 obrażenia", [], 0, [0,1]],
 	2 : ["Kopniak Alternatywny", 2, "0", "Zadaj 4 obrażenia", [2,"Zdaj 2 obrażenia", [0,2]], 0, [0,4]],
+	3 : ["Przepotężny Healek", 2, "0", "Wylecz 4 HP", [1,"Wylecz 67 obrażeń", [0,2]], 1, [0, 4]],
 }
 
 

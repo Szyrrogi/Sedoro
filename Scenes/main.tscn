@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://cj07e7tcxt8aw"]
+[gd_scene load_steps=19 format=3 uid="uid://cj07e7tcxt8aw"]
 
 [ext_resource type="Texture2D" uid="uid://dh5pmnobyuurf" path="res://Art/Background/BackgroundUp1.png" id="2_344ge"]
 [ext_resource type="Script" uid="uid://deppbi7l0j7k7" path="res://Scripts/Deck.gd" id="3_344ge"]
@@ -15,6 +15,8 @@
 [ext_resource type="PackedScene" uid="uid://ckx1a5k12nwo2" path="res://Scenes/Enemy.tscn" id="12_6iyac"]
 [ext_resource type="Script" uid="uid://cr4jpy03ksr4o" path="res://Scripts/ManaManager.gd" id="14_wsu2k"]
 [ext_resource type="Texture2D" uid="uid://ddidnxwdxqqij" path="res://Art/Icon/Mana/Mana2.png" id="15_k12tt"]
+[ext_resource type="PackedScene" uid="uid://blplkuxn65mic" path="res://Scenes/Character.tscn" id="16_k12tt"]
+[ext_resource type="Script" uid="uid://dhreaeaovlfgu" path="res://Scenes/character.gd" id="17_h1bgf"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hptm8"]
 size = Vector2(191, 269)
@@ -120,7 +122,8 @@ bbcode_enabled = true
 text = "[font_size=75]6/6"
 
 [node name="Enemy" parent="." instance=ExtResource("12_6iyac")]
-position = Vector2(993, 475)
+position = Vector2(1458, 518)
+scale = Vector2(0.6, 0.6)
 
 [node name="ManaManager" type="Node2D" parent="." node_paths=PackedStringArray("mana_sprite", "mana2_sprite")]
 script = ExtResource("14_wsu2k")
@@ -136,3 +139,8 @@ texture = ExtResource("15_k12tt")
 position = Vector2(105, 380.16)
 scale = Vector2(0.2089258, 0.2089258)
 texture = ExtResource("15_k12tt")
+
+[node name="Character" parent="." instance=ExtResource("16_k12tt")]
+position = Vector2(563, 544)
+scale = Vector2(0.5, 0.5)
+script = ExtResource("17_h1bgf")

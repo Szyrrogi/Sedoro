@@ -50,7 +50,7 @@ func _process(delta):
 	
 func setup_card(_id: int):
 	id = _id
-	put_type = CardDatabase.CARDS[-id][5]
+	put_type = CardDatabase.CARDS[_id][5]
 	effect = CardDatabase.CARDS[_id][6]
 	cost = CardDatabase.CARDS[_id][1]
 	frame.set_up(_id)

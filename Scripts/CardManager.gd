@@ -40,30 +40,35 @@ func _ready():
 func _process(delta):
 	# --- 1. OBSŁUGA STRZAŁKI CELOWANIA ---
 	if targeting_card and arrow_sprite:
-		if arrow_sprite.texture != null:
-			var mouse_pos = get_global_mouse_position()
-			var target_pos = Vector2(
-				clamp(mouse_pos.x, 0, screen_size.x),
-				clamp(mouse_pos.y, 0, screen_size.y)
-			)
-			
-			# Najpierw liczymy dystans
-			var distance = targeting_card.global_position.distance_to(target_pos)
-			
-			# --- NOWY WARUNEK: MARTWA STREFA ---
-			if distance < MIN_ARROW_DISTANCE:
-				arrow_sprite.visible = false # Ukrywamy strzałkę blisko środka karty
-			else:
-				arrow_sprite.visible = true  # Pokazujemy, gdy wyjedzie poza strefę
+		# === NOWY WARUNEK: SPRAWDZAMY TYP KARTY ===
+		# Rysujemy strzałkę TYLKO jeśli put_type wynosi 0
+		if targeting_card.put_type == 0:
+			if arrow_sprite.texture != null:
+				var mouse_pos = get_global_mouse_position()
+				var target_pos = Vector2(
+					clamp(mouse_pos.x, 0, screen_size.x),
+					clamp(mouse_pos.y, 0, screen_size.y)
+				)
 				
-				# Ustawiamy pozycję, obrót i skalę tylko wtedy, gdy strzałka jest widoczna
-				arrow_sprite.global_position = targeting_card.global_position
-				arrow_sprite.look_at(target_pos)
+				# Najpierw liczymy dystans
+				var distance = targeting_card.global_position.distance_to(target_pos)
 				
-				var texture_width = arrow_sprite.texture.get_width()
-				if texture_width > 0:
-					arrow_sprite.scale.x = distance / texture_width
-					arrow_sprite.scale.y = 0.3 
+				# --- WARUNEK: MARTWA STREFA ---
+				if distance < MIN_ARROW_DISTANCE:
+					arrow_sprite.visible = false 
+				else:
+					arrow_sprite.visible = true 
+					
+					arrow_sprite.global_position = targeting_card.global_position
+					arrow_sprite.look_at(target_pos)
+					
+					var texture_width = arrow_sprite.texture.get_width()
+					if texture_width > 0:
+						arrow_sprite.scale.x = distance / texture_width
+						arrow_sprite.scale.y = 0.3 
+		else:
+			# Jeśli put_type jest inny niż 0, upewniamy się, że strzałka jest ukryta
+			arrow_sprite.visible = false
 		
 		# ZATRZYMUJEMY KOD TUTAJ - jak celujemy, karta nie reaguje na drag i hover
 		return
@@ -97,11 +102,10 @@ func _process(delta):
 
 # --- BEZPOŚREDNIA OBSŁUGA MYSZY DLA CELOWANIA ---
 func _input(event):
-	# Jeśli jesteśmy w trybie celowania, ten blok przejmuje kliknięcia
 	if targeting_card and event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 			finish_targeting()
-			get_viewport().set_input_as_handled() # Zatrzymuje kliknięcie przed pójściem dalej
+			get_viewport().set_input_as_handled()
 		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 			cancel_targeting()
 			get_viewport().set_input_as_handled()
@@ -110,27 +114,49 @@ func _input(event):
 # --- LOGIKA CELOWANIA ---
 func start_targeting(card):
 	targeting_card = card
-	if arrow_sprite: arrow_sprite.visible = true
+	
+	# === ZMIANA: Pokaż strzałkę tylko, jeśli typ to 0 ===
+	if arrow_sprite:
+		if card.put_type == 0:
+			arrow_sprite.visible = true
+		else:
+			arrow_sprite.visible = false
+			
 	print("Rozpoczęto celowanie z karty: ", card.name)
-	# Zmniejszamy kartę, jeśli była powiększona
+	
 	if card.has_method("set_hovered"):
 		card.set_hovered(false)
 
 func finish_targeting():
-	var target_enemy = hovering_enemy_check()
-	
-	if target_enemy:
-		print("TRAFIONO PRZECIWNIKA: ", target_enemy.name)
-		if target_enemy.has_method("take_damage"):
-			game_manager.mana -= int(hovered_card.cost)
-			target_enemy.take(hovered_card)
-			discard.add_to_discard(hovered_card)
-			hand.recalculate_positions()
-			#target_enemy.take_damage()
+	# --- ROZDZIELENIE LOGIKI ZE WZGLĘDU NA TYP KARTY ---
+	if targeting_card.put_type == 0:
+		# 1. KARTA CELOWANA W PRZECIWNIKA (np. Atak)
+		var target_enemy = hovering_enemy_check()
+		
+		if target_enemy:
+			print("TRAFIONO PRZECIWNIKA: ", target_enemy.name)
+			if target_enemy.has_method("take_damage"): 
+				# UWAGA: Zamieniłem 'hovered_card' na 'targeting_card', żeby nie było błędów!
+				game_manager.mana -= int(targeting_card.cost)
+				target_enemy.take(targeting_card)
+				discard.add_to_discard(targeting_card)
+				hand.recalculate_positions()
+		else:
+			print("Strzelono w puste pole. Karta wraca do ręki.")
+			
 	else:
-		# Jeśli chcesz sprawdzić czy trafiono inną kartę, zrób to tutaj
-		print("Strzelono w puste pole.")
+		# 2. KARTA NIECELOWANA / GLOBALNA (put_type != 0) (np. Pancerz, Leczenie)
+		# Taka karta rzuca swój efekt po prostu po kliknięciu myszką gdziekolwiek
+		print("ZAGRANO KARTĘ GLOBALNĄ / NA GRACZA: ", targeting_card.name)
+		game_manager.mana -= int(targeting_card.cost)
+		
+		# ---> TUTAJ DODAJ SWOJĄ LOGIKĘ EFEKTU <---
+		# Np.: game_manager.player.heal(targeting_card.effect)
+		
+		discard.add_to_discard(targeting_card)
+		hand.recalculate_positions()
 	
+	# Na koniec zawsze anulujemy tryb celowania (sprzątamy po sobie)
 	cancel_targeting()
 
 func cancel_targeting():
@@ -143,31 +169,22 @@ func hovering_enemy_check():
 	var parameters = PhysicsPointQueryParameters2D.new()
 	parameters.position = get_global_mouse_position()
 	parameters.collide_with_areas = true
-	parameters.collision_mask = COLLISION_MASK_ENEMY # Szukamy maski = 4
+	parameters.collision_mask = COLLISION_MASK_ENEMY
 	
 	var result = space_state.intersect_point(parameters)
 	if result.size() > 0:
 		var hit_collider = result[0].collider
-		print("TEST: Myszka dotknęła obiektu: ", hit_collider.name) # To nam bardzo pomoże w konsoli!
-		
-		# Sprawdzamy, czy sam trafiony obiekt ma funkcję (Scenariusz A)
 		if hit_collider.has_method("take_damage"):
 			return hit_collider
-			
-		# Sprawdzamy, czy jego rodzic ma funkcję (Scenariusz B)
 		elif hit_collider.get_parent() and hit_collider.get_parent().has_method("take_damage"):
 			return hit_collider.get_parent()
-			
-		# Jeśli nie znaleźliśmy funkcji, i tak zwracamy obiekt, żeby logika się nie popsuła
 		return hit_collider 
 		
 	return null
 
-
 # --- SYGNAŁY Z INPUT MANAGERA ---
 func _on_card_left_clicked(card):
-	if targeting_card: return # Ignoruj, jeśli celujemy
-	
+	if targeting_card: return
 	if card.get_parent() == hand: 
 		held_card = card
 		hold_timer = 0.0
@@ -179,15 +196,13 @@ func _start_dragging(card):
 	if card.has_method("set_hovered"): card.set_hovered(false) 
 
 func _on_left_release():
-	if targeting_card: return # Ignoruj, jeśli celujemy
+	if targeting_card: return
 
-	# To jest Twój KLIK - włącza tryb celowania strzałką!
 	if held_card and not dragged_card:
 		print("Karta kliknięta!")
 		if held_card.cost <= game_manager.mana:
 			start_targeting(held_card)
 
-	# Puszczanie karty po przeciąganiu
 	if dragged_card:
 		dragged_card.is_dragged = false 
 		dragged_card.z_index = 0 
@@ -196,8 +211,7 @@ func _on_left_release():
 	held_card = null
 
 func _on_card_right_clicked(card):
-	if targeting_card: return # Ignoruj, jeśli celujemy
-	
+	if targeting_card: return
 	if card.get_parent() == hand:
 		toggle_card_selection(card)
 
