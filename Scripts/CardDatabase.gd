@@ -1,15 +1,18 @@
 #Nazwa #Koszt #Art #Opis #(rodzaj, Opis2), na kogo,  efekt
 
-#0 - Na używajacego karty
-#1 - wybrany przeciwnik
+#0 - wybrany przeciwnik
+#1 - Na używajacego karty
 #2 - Wszyscy przeciwnicy
 #3 - Losowy przecwnik
 
 const CARDS = { 
 	0 : ["Kopniak", 2, "0", "Zadaj 4 obrażenia", [1,"Zdaj 2 obrażenia", [0,2]], 0, [0, 4]],
-	1 : ["Punch", 1, "1", "Zadaj 6 obrażenia", [], 0, [0,6]],
-	2 : ["armorUp", 0, "0", "daje 3 Armora", [2,"Zdaj 2 obrażenia", [0,2]], 1, [1,3]],
-	3 : ["Przepotężny Healek", 2, "0", "Wylecz 4 HP", [1,"Wylecz 67 obrażeń", [3,67]], 1, [3, 4]],
+	1 : ["Blok", 1, "1", "4 Armora", [], 1, [1,4]],
+	2 : ["Mega blok", 3, "0", "6 Armora", [1,"3 Armora", [1,3]], 1, [1,6]],
+	3 : ["Pchnięcie", 4, "0", "Zadaj 5 obrażeń", [2,"Zadaj 1 obrażeń", [3,67]], 0, [0, 5]],
+	4 : ["Zamachniecie", 2, "0", "Zadaj 2 obrażenia", [], 0, [0, 2]],
+	5 : ["Bieg", 2, "0", "dobierz 2 karty", [1,"Dobierz Karte", [2,1]], 1, [2, 2]],
+	6 : ["Szerokie Cięcie", 3, "0", "Zadaj wszystkim 1 obrażeń", [2,"Zadaj wszystkim 1 obrażeń", [3,67]], 2, [0, 1]],
 }
 
 

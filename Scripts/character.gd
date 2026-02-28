@@ -17,8 +17,8 @@ func _ready():
 	set_armor()
 		
 func start_tunr():
-	current_armor = 0
-	set_armor()
+	print("")
+	#set_armor()
 	
 func set_armor():
 	print("wdo")
@@ -34,15 +34,34 @@ func add_armor(amount: int = 10):
 
 func take(card):
 	print(card.effect)
-	print("nigga")
+	
 	if card.effect[0] == 0:
 		take_damage(card.effect[1])
 		
-	if card.effect[0] == 1:
+	elif card.effect[0] == 1:
 		add_armor(card.effect[1])
 		
-	if card.effect[0] == 3:
+	elif card.effect[0] == 2: # NOWY EFEKT: Dobieranie kart
+		# Sprawdzamy czy postać otrzymująca efekt to Gracz
+		# Zwróć uwagę, czy Twój węzeł Gracza na scenie na pewno nazywa się "Player"
+		if self.name == "Player" or self.is_in_group("Player"): 
+			print("Gracz dobiera ", card.effect[1], " kart!")
+			draw_cards_for_player(card.effect[1])
+		else:
+			print("Przeciwnik używa karty dobierania, ale nie robi to na nim wrażenia.")
+			
+	elif card.effect[0] == 3:
 		heal(card.effect[1])
+
+# Funkcja pomocnicza odnajdująca menadżera i dodająca karty do ręki
+func draw_cards_for_player(amount: int):
+	# Szukamy GameManager w drzewie sceny
+	var game_manager = get_tree().root.find_child("GameManager", true, false)
+	
+	if game_manager and game_manager.deck and game_manager.hand:
+		var drawn_cards = await game_manager.deck.draw_cards(amount)
+		for c in drawn_cards:
+			game_manager.hand.add_card(c)
 
 func heal(amount: int):
 	current_health = min(amount+current_health,max_health)

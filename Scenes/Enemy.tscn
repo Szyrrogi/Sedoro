@@ -6,7 +6,7 @@
 [ext_resource type="Texture2D" uid="uid://dy20rr06h88yu" path="res://Art/Misc/HP3.png" id="3_mo1ky"]
 [ext_resource type="AudioStream" uid="uid://bibt8x1d1xt5n" path="res://Art/SFX/Video-Project-2.mp3" id="3_xeo28"]
 [ext_resource type="Texture2D" uid="uid://g8vqqr0y2dlb" path="res://Art/Misc/HP0.png" id="4_mo1ky"]
-[ext_resource type="Texture2D" uid="uid://cxe1vb7g4pk7g" path="res://Art/Stats/Status1.png" id="7_6bs3c"]
+[ext_resource type="Texture2D" uid="uid://cxe1vb7g4pk7g" path="res://Art/Stats/Status3.png" id="7_6bs3c"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wovta"]
 size = Vector2(1356, 606)

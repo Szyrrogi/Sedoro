@@ -42,7 +42,6 @@ func _ready():
 func _process(delta):
 	# --- 1. OBSŁUGA STRZAŁKI CELOWANIA ---
 	if targeting_card and arrow_sprite:
-		# === NOWY WARUNEK: SPRAWDZAMY TYP KARTY ===
 		# Rysujemy strzałkę TYLKO jeśli put_type wynosi 0
 		if targeting_card.put_type == 0:
 			if arrow_sprite.texture != null:
@@ -130,31 +129,49 @@ func start_targeting(card):
 		card.set_hovered(false)
 
 func finish_targeting():
-	# --- ROZDZIELENIE LOGIKI ZE WZGLĘDU NA TYP KARTY ---
-	if targeting_card.put_type != 1:
-		# 1. KARTA CELOWANA W PRZECIWNIKA (np. Atak)
+	var card_played = false
+	
+	if targeting_card.put_type == 0:
+		# 1. KARTA CELOWANA W KONKRETNEGO PRZECIWNIKA
 		var target_enemy = hovering_enemy_check()
-		
 		if target_enemy:
 			print("TRAFIONO PRZECIWNIKA: ", target_enemy.name)
 			if target_enemy.has_method("take_damage"): 
-				# UWAGA: Zamieniłem 'hovered_card' na 'targeting_card', żeby nie było błędów!
-				game_manager.mana -= int(targeting_card.cost)
 				target_enemy.take(targeting_card)
-				discard.add_to_discard(targeting_card)
-				hand.recalculate_positions()
+				card_played = true
 		else:
 			print("Strzelono w puste pole. Karta wraca do ręki.")
 			
-	else:
-		# 2. KARTA NIECELOWANA / GLOBALNA (put_type != 0) (np. Pancerz, Leczenie)
-		# Taka karta rzuca swój efekt po prostu po kliknięciu myszką gdziekolwiek
-		print("ZAGRANO KARTĘ GLOBALNĄ / NA GRACZA: ", targeting_card.name)
-		game_manager.mana -= int(targeting_card.cost)
+	elif targeting_card.put_type == 1:
+		# 2. KARTA NA GRACZA (np. Leczenie, Tarcza, Dobieranie)
+		print("ZAGRANO KARTĘ NA GRACZA: ", targeting_card.name)
 		player.take(targeting_card)
-		# ---> TUTAJ DODAJ SWOJĄ LOGIKĘ EFEKTU <---put_type
-		# Np.: game_manager.player.heal(targeting_card.effect)
+		card_played = true
 		
+	elif targeting_card.put_type == 2:
+		# 3. KARTA OBSZAROWA (Atakuje wszystkich wrogów)
+		print("ZAGRANO KARTĘ OBSZAROWĄ (Wszyscy wrogowie)!")
+		if game_manager.enemies.size() > 0:
+			for enemy in game_manager.enemies:
+				enemy.take(targeting_card)
+			card_played = true
+		else:
+			print("Brak przeciwników do ataku.")
+			
+	elif targeting_card.put_type == 3:
+		# 4. KARTA W LOSOWEGO WROGA
+		print("ZAGRANO KARTĘ W LOSOWEGO WROGA!")
+		if game_manager.enemies.size() > 0:
+			var random_enemy = game_manager.enemies.pick_random()
+			print("Wylosowano: ", random_enemy.name)
+			random_enemy.take(targeting_card)
+			card_played = true
+		else:
+			print("Brak przeciwników do ataku.")
+
+	# Jeśli karta została poprawnie użyta: zabieramy manę i usuwamy ją z ręki
+	if card_played:
+		game_manager.mana -= int(targeting_card.cost)
 		discard.add_to_discard(targeting_card)
 		hand.recalculate_positions()
 	

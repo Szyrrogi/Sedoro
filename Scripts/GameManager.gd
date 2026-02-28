@@ -5,7 +5,10 @@ extends Node
 @export var hand: Node2D
 @export var discard: Node2D
 @export var end_turn_button: Button
-@export var mana_text: RichTextLabel
+@export var shuffle_button: Button # NOWE: Przycisk za 3 many do odzyskiwania kart
+@export var mana_manager: Node2D
+@export var player: Node2D
+@export var enemies: Array[Node]
 
 # Prosta maszyna stanów
 enum State { PLAYER_START, PLAYER_ACTION, ENEMY_TURN }
@@ -13,86 +16,115 @@ var current_state = State.PLAYER_START
 
 const HAND_LIMIT = 5
 const CARDS_PER_TURN = 3
-const MAX_MANA = 8
+const CARDS_START = 4 # Nowa stała dla pierwszej tury
+const MANA_MAX = 5
+const SHUFFLE_COST = 3 # Koszt przetasowania kart z odrzuconych do talii
 
-var mana = 5
+var is_first_turn: bool = true # Flaga sprawdzająca, czy to początek gry
+var mana = 6
 
 func _ready():
-	# Czekamy chwilę na start gry, żeby wszystko się załadowało
 	if end_turn_button:
 		end_turn_button.pressed.connect(_on_end_turn_button_pressed)
+		
+	# NOWE: Podłączenie przycisku tasowania
+	if shuffle_button:
+		shuffle_button.pressed.connect(_on_shuffle_button_pressed)
+		
+	# Upewniamy się, że wszyscy mają standardowe kolory na starcie
+	player.modulate = Color(1, 1, 1)
+	for enemy in enemies:
+		enemy.modulate = Color(1, 1, 1)
+		
 	await get_tree().create_timer(0.5).timeout
 	start_player_turn()
 	
-func _process(delta):
-	mana_text.text = mana + "/" + MAX_MANA
+func _process(delta: float) -> void:
+	mana_manager.set_mana(mana)
 	
-	
+	if shuffle_button:
+		# POPRAWKA: Patrzymy na wielkość tablicy discard_data w skrypcie Discard
+		var discard_count = discard.discard_data.size()
+		
+		# Przycisk widoczny tylko jeśli są karty w odrzuconych
+		shuffle_button.visible = discard_count > 0 
+		
+		# Przycisk aktywny tylko jeśli jest nasza tura i mamy min. 3 many
+		shuffle_button.disabled = mana < SHUFFLE_COST or current_state != State.PLAYER_ACTION
+
+func _on_shuffle_button_pressed():
+	print("klika")
+	if current_state == State.PLAYER_ACTION and mana >= SHUFFLE_COST:
+		mana -= SHUFFLE_COST
+		print("Ręczne przenoszenie odrzuconych kart do talii...")
+		
+		# POPRAWKA: Używamy gotowej funkcji, którą masz już w Deck.gd!
+		deck.reshuffle_from_discard()
+			
+		print("Karty przetasowane! Pozostała mana: ", mana)
+
 func _on_end_turn_button_pressed():
-	# Dla bezpieczeństwa sprawdzamy czy to na pewno faza akcji
 	if current_state == State.PLAYER_ACTION:
 		end_player_turn()
+
+
 
 func start_player_turn():
 	current_state = State.PLAYER_START
 	print("\n--- POCZĄTEK TURY GRACZA ---")
+	mana = MANA_MAX
+	player.start_tunr() # Zachowałem Twoją oryginalną literówkę w nazwie funkcji ;)
+	
+	# NOWE: Podświetlenie gracza podczas jego tury (lekko jaśniejszy)
+	player.modulate = Color(1.5, 1.5, 1.5)
 	
 	# --- LOGIKA DOBIERANIA ---
 	var current_hand_size = hand.get_child_count()
 	
-	# Ile chcemy dobrać? (Domyślnie 3)
-	var cards_to_draw = CARDS_PER_TURN
+	# Ile chcemy dobrać? 4 na start, potem po 3
+	var cards_to_draw = CARDS_START if is_first_turn else CARDS_PER_TURN
 	
 	# Sprawdzamy limit ręki (5)
 	var space_in_hand = HAND_LIMIT - current_hand_size
 	
-	# Jeśli mamy mało miejsca, dobieramy tylko tyle ile wejdzie
-	# Jeśli np. mamy 4 karty, space=1. Chcemy dobrać 3. min(3, 1) = 1.
-	# Jeśli mamy 0 kart, space=5. min(3, 5) = 3.
+	# Dobieramy tylko tyle, na ile jest miejsce
 	var final_draw_count = min(cards_to_draw, space_in_hand)
 	
 	if final_draw_count > 0:
 		print("Dobieram: ", final_draw_count, " kart.")
 		
-		# --- TU BYŁ BŁĄD ---
-		# Było: var new_cards = deck.draw_cards(final_draw_count)
-		
-		# MA BYĆ (dodaj 'await'):
+		# Upewnij się, że funkcja draw_cards w skrypcie talii (deck) NIE uzupełnia jej już
+		# automatycznie. Powinna po prostu zwrócić pustą tablicę, gdy zabraknie kart!
 		var new_cards = await deck.draw_cards(final_draw_count)
-		
-		# Teraz kod grzecznie poczeka, aż karty przylecą z Discardu (jeśli było tasowanie)
-		# i dopiero wtedy wykona to co poniżej:
 		
 		for card in new_cards:
 			hand.add_card(card)
 			await get_tree().create_timer(0.2).timeout
 	else:
-		print("Ręka pełna, nie dobieram.")
+		print("Ręka pełna! Masz 5 kart, więc nic nie dostajesz.")
 	
+	is_first_turn = false # Pierwsza tura za nami, wyłączamy flagę
 	current_state = State.PLAYER_ACTION
-	print("Faza akcji: Wybierz do 3 kart.")
+	print("Faza akcji: Zrób coś mądrego z tymi kartami.")
 
-# Tę funkcję musisz podpiąć pod jakiś guzik w UI "End Turn"
-# albo wywołać spacją w _input
 func end_player_turn():
 	if current_state != State.PLAYER_ACTION:
 		return
-		
-	print("Koniec tury gracza. Rozpatrywanie...")
 	
-	# --- LOGIKA ODRZUCANIA ---
-	# Kopiujemy listę kart, bo będziemy modyfikować dzieci Handa
+	print("Koniec tury gracza. Czas na sprzątanie...")
+	
+	# Kopiujemy listę kart
 	var cards_in_hand = hand.get_all_cards().duplicate()
 	
 	for card in cards_in_hand:
 		if card.is_selected:
-			# Wybrane karty zostają na ręce (według Twojego opisu)
-			# Opcjonalnie: Resetujemy ich zaznaczenie na nową turę?
-			# card.set_selected(false) 
-			pass
+			# ZAZNACZONE lecą na śmietnik!
+			card.set_selected(false) # Resetujemy stan wizualny przed wyrzuceniem
+			hand.remove_card(card)   # Wyrywamy z ręki
+			discard.add_to_discard(card) # Rzucamy na pożarcie do Discardu
 		else:
-			# Niewybrane lecą na śmietnik
-			discard.add_to_discard(card)
+			# Niezaznaczone grzecznie zostają na ręce
+			pass
 			
 	# Przejście do tury wroga
 	start_enemy_turn()
@@ -101,23 +133,32 @@ func start_enemy_turn():
 	current_state = State.ENEMY_TURN
 	print("Tura przeciwnika...")
 	
-	# Symulacja myślenia wroga
-	await get_tree().create_timer(1.5).timeout
+	# NOWE: Zgaszenie podświetlenia gracza (wraca do normalnego koloru)
+	player.modulate = Color(1, 1, 1)
+	
+	for enemy in enemies:
+		# NOWE: Podświetlenie przeciwnika, który w tym momencie się rusza
+		enemy.modulate = Color(1.5, 1.5, 1.5)
+		
+		enemy.action()
+		await get_tree().create_timer(1).timeout
+		
+		# NOWE: Zgaszenie podświetlenia przeciwnika po jego akcji
+		enemy.modulate = Color(1, 1, 1)
+		
+	await get_tree().create_timer(1).timeout
 	
 	print("Przeciwnik zakończył ruch.")
-	# Powrót do gracza
 	start_player_turn()
 	
 func set_button_active(is_active: bool):
 	if end_turn_button:
 		end_turn_button.disabled = !is_active
-		# Opcjonalnie zmień tekst
 		if is_active:
 			end_turn_button.text = "ZAKOŃCZ TURĘ"
 		else:
 			end_turn_button.text = "CZEKAJ..."
 
-# Tymczasowe sterowanie spacją do testów
 func _input(event):
-	if event.is_action_pressed("ui_accept"): # Spacja
+	if event.is_action_pressed("ui_accept"):
 		end_player_turn()

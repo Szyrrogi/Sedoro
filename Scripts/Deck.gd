@@ -3,7 +3,7 @@ extends Node2D
 @export var card_scene: PackedScene 
 @export var discard_ref: Node2D # PRZYPISZ TU DISCARD W INSPEKTORZE!
 
-var deck_data = [3, 3, 3, 2, 2, 2, 0, 0] # Przykładowe dane startowe
+var deck_data = [1,1,1,2,3,4,4,5,6] # Przykładowe dane startowe
 var card_database_reference = preload("res://Scripts/CardDatabase.gd")
 
 func _ready():
@@ -18,22 +18,13 @@ func draw_cards(amount: int) -> Array:
 	for i in range(amount):
 		# SPRAWDZANIE CZY MAMY KARTY
 		if deck_data.is_empty():
-			print("Talia pusta! Próba przetasowania...")
-			
-			# Sprawdź czy Discard ma karty
-			if discard_ref.discard_data.is_empty():
-				print("Koniec gry! Brak kart w talii i w śmietniku.")
-				break # Przerywamy dobieranie
-			
-			# Jeśli są karty w Discardzie -> Animacja i tasowanie
-			# Używamy 'await', żeby kod poczekał na koniec animacji tasowania
-			await reshuffle_from_discard()
+			print("Talia pusta! Brak kart do dobrania. Użyj przycisku, aby przetasować odrzucone.")
+			break # Przerywamy dobieranie, NIE tasujemy automatycznie!
 		
-		# Dobieranie właściwe (po ewentualnym przetasowaniu)
-		if not deck_data.is_empty():
-			var card_id = deck_data.pop_front()
-			var new_card = create_card_instance(card_id)
-			drawn_cards.append(new_card)
+		# Dobieranie właściwe
+		var card_id = deck_data.pop_front()
+		var new_card = create_card_instance(card_id)
+		drawn_cards.append(new_card)
 			
 	update_visuals()
 	return drawn_cards
