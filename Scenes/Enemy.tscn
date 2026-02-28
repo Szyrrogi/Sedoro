@@ -1,17 +1,20 @@
-[gd_scene load_steps=8 format=3 uid="uid://ckx1a5k12nwo2"]
+[gd_scene load_steps=9 format=3 uid="uid://ckx1a5k12nwo2"]
 
 [ext_resource type="Texture2D" uid="uid://dbqlgbbmlq1d3" path="res://Art/Enemy/enemy_test.png" id="1_m1htj"]
-[ext_resource type="Script" uid="uid://021as5ev2a7a" path="res://Scenes/enemy.gd" id="1_wovta"]
+[ext_resource type="Script" uid="uid://021as5ev2a7a" path="res://Scripts/enemy.gd" id="1_wovta"]
 [ext_resource type="Texture2D" uid="uid://cnkvfweuow6o5" path="res://Art/Misc/HP2.png" id="3_1exfc"]
 [ext_resource type="Texture2D" uid="uid://dy20rr06h88yu" path="res://Art/Misc/HP3.png" id="3_mo1ky"]
 [ext_resource type="AudioStream" uid="uid://bibt8x1d1xt5n" path="res://Art/SFX/Video-Project-2.mp3" id="3_xeo28"]
 [ext_resource type="Texture2D" uid="uid://g8vqqr0y2dlb" path="res://Art/Misc/HP0.png" id="4_mo1ky"]
+[ext_resource type="Texture2D" uid="uid://cxe1vb7g4pk7g" path="res://Art/Stats/Status1.png" id="7_6bs3c"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wovta"]
 size = Vector2(1356, 606)
 
-[node name="Enemy" type="Node2D" node_paths=PackedStringArray("health_bar", "armor_label")]
+[node name="Enemy" type="Node2D" node_paths=PackedStringArray("status_text", "status_art", "health_bar", "armor_label")]
 script = ExtResource("1_wovta")
+status_text = NodePath("StatusCount")
+status_art = NodePath("Status")
 health_bar = NodePath("Area2D/TextureProgressBar")
 armor_label = NodePath("RichTextLabel")
 
@@ -48,3 +51,16 @@ offset_right = 623.0
 offset_bottom = -314.0
 bbcode_enabled = true
 text = "[font_size=155][color=white]3"
+
+[node name="Status" type="Sprite2D" parent="."]
+position = Vector2(-56.000004, -504.00003)
+scale = Vector2(0.331235, 0.33123496)
+texture = ExtResource("7_6bs3c")
+
+[node name="StatusCount" type="RichTextLabel" parent="."]
+offset_left = 17.0
+offset_top = -613.0
+offset_right = 247.0
+offset_bottom = -392.0
+bbcode_enabled = true
+text = "="
