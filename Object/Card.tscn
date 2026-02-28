@@ -14,7 +14,7 @@ position = Vector2(1747.99, 880)
 script = ExtResource("1_du2ps")
 frame = NodePath("Ramka")
 
-[node name="Ramka" type="Sprite2D" parent="." node_paths=PackedStringArray("cost_label", "name_label", "description_label", "description2_label", "art_label", "separation_label")]
+[node name="Ramka" type="Sprite2D" parent="." node_paths=PackedStringArray("cost_label", "name_label", "description_label", "description2_label", "art_label", "separation_label", "active_label")]
 position = Vector2(1.0100346, 0.9999809)
 scale = Vector2(0.3399571, 0.33995715)
 texture = ExtResource("2_du2ps")
@@ -25,6 +25,7 @@ description_label = NodePath("Opis")
 description2_label = NodePath("Opis2")
 art_label = NodePath("Art")
 separation_label = NodePath("Pasek")
+active_label = NodePath("Aktywuje")
 
 [node name="Art" type="Sprite2D" parent="Ramka"]
 show_behind_parent = true
@@ -77,6 +78,11 @@ bbcode_enabled = true
 text = "[font_size=55][color=black]Zadaj [font_size=65]3 [font_size=55]obrażeń"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="Aktywuje" type="Sprite2D" parent="Ramka"]
+position = Vector2(94.12951, -567.71857)
+scale = Vector2(0.6893062, 0.68930626)
+texture = ExtResource("4_7yd01")
 
 [node name="Area2D" type="Area2D" parent="."]
 visible = false

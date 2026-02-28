@@ -9,6 +9,7 @@ const CardDatabase = preload("res://Scripts/CardDatabase.gd")
 @export var description2_label: RichTextLabel
 @export var art_label: Sprite2D
 @export var separation_label: Sprite2D
+@export var active_label: Sprite2D
 
 var card_name: String
 var energy_cost: int
@@ -36,6 +37,11 @@ func set_up(_id : int):
 	else:
 		secondary_effect = ""
 		separation_label.visible = false
+	if data[7] != 0:
+		active_label.visible = true
+		active_label.texture = load("res://Art/Card/division" +  str(data[7]) + ".png")
+	else:
+		active_label.visible = false
 
 	cost_label.text = "[font_size=155][color=white]" + str(energy_cost) 
 	name_label.text = "[font_size=55][color=black]" + card_name

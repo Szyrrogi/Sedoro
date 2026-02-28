@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://cj07e7tcxt8aw"]
+[gd_scene load_steps=19 format=3 uid="uid://cj07e7tcxt8aw"]
 
 [ext_resource type="Texture2D" uid="uid://dh5pmnobyuurf" path="res://Art/Background/BackgroundUp1.png" id="2_344ge"]
 [ext_resource type="Script" uid="uid://deppbi7l0j7k7" path="res://Scripts/Deck.gd" id="3_344ge"]
@@ -16,6 +16,7 @@
 [ext_resource type="Script" uid="uid://cr4jpy03ksr4o" path="res://Scripts/ManaManager.gd" id="14_wsu2k"]
 [ext_resource type="Texture2D" uid="uid://ddidnxwdxqqij" path="res://Art/Icon/Mana/Mana2.png" id="15_k12tt"]
 [ext_resource type="PackedScene" uid="uid://blplkuxn65mic" path="res://Scenes/Character.tscn" id="16_k12tt"]
+[ext_resource type="Texture2D" uid="uid://co2hcc6ymaiom" path="res://Art/Card/division1.png" id="17_h1bgf"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hptm8"]
 size = Vector2(191, 269)
@@ -75,14 +76,21 @@ position = Vector2(958.8871, 818.6773)
 scale = Vector2(0.81487936, 0.7384626)
 texture = ExtResource("4_hptm8")
 
+[node name="Bonus" type="Sprite2D" parent="Background"]
+visible = false
+position = Vector2(287, 140.00002)
+scale = Vector2(0.59, 0.93564355)
+texture = ExtResource("17_h1bgf")
+
 [node name="InputManager" type="Node2D" parent="."]
 position = Vector2(899.00006, 905)
 scale = Vector2(0.6, 0.6)
 script = ExtResource("5_d1ilt")
 
-[node name="CardManager" type="Node2D" parent="." node_paths=PackedStringArray("player")]
+[node name="CardManager" type="Node2D" parent="." node_paths=PackedStringArray("player", "active_label")]
 script = ExtResource("6_6iyac")
 player = NodePath("../Player")
+active_label = NodePath("../Background/Bonus")
 
 [node name="ArrowSprite" type="Sprite2D" parent="CardManager"]
 visible = false
@@ -96,7 +104,7 @@ position = Vector2(899.29, 905)
 scale = Vector2(0.6, 0.6)
 script = ExtResource("8_344ge")
 
-[node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("deck", "hand", "discard", "end_turn_button", "shuffle_button", "mana_manager", "player", "enemies")]
+[node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("deck", "hand", "discard", "end_turn_button", "shuffle_button", "mana_manager", "player", "enemies", "card_manager")]
 script = ExtResource("9_hptm8")
 deck = NodePath("../Background/Deck")
 hand = NodePath("../Hand")
@@ -106,6 +114,7 @@ shuffle_button = NodePath("../CanvasLayer/Tasuj")
 mana_manager = NodePath("../ManaManager")
 player = NodePath("../Player")
 enemies = [NodePath("../Enemy")]
+card_manager = NodePath("../CardManager")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 

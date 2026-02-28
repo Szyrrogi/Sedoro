@@ -18,8 +18,11 @@ const COLOR_NORMAL = Color.WHITE
 
 var id: int = 0
 var effect
+var effect_extra
+var cost_color
 var cost
 var put_type
+var active
 
 func _ready():
 	# Ważne: Żeby raycast trafiał w kartę, Area2D musi być w tej warstwie
@@ -53,6 +56,10 @@ func setup_card(_id: int):
 	put_type = CardDatabase.CARDS[_id][5]
 	effect = CardDatabase.CARDS[_id][6]
 	cost = CardDatabase.CARDS[_id][1]
+	active = CardDatabase.CARDS[_id][7]
+	if(CardDatabase.CARDS[_id][4].size() > 0):
+		effect_extra = CardDatabase.CARDS[_id][4][2]
+		cost_color = CardDatabase.CARDS[_id][4][0]
 	frame.set_up(_id)
 	print(effect)
 #	Tu będzie się uzupełniać

@@ -9,6 +9,7 @@ extends Node
 @export var mana_manager: Node2D
 @export var player: Node2D
 @export var enemies: Array[Node]
+@export var card_manager: Node2D
 
 # Prosta maszyna stanów
 enum State { PLAYER_START, PLAYER_ACTION, ENEMY_TURN }
@@ -113,7 +114,8 @@ func end_player_turn():
 	
 	print("Koniec tury gracza. Czas na sprzątanie...")
 	
-	# Kopiujemy listę kart
+	card_manager.active = 0
+	card_manager.set_active()
 	var cards_in_hand = hand.get_all_cards().duplicate()
 	
 	for card in cards_in_hand:

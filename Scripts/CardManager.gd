@@ -128,55 +128,113 @@ func start_targeting(card):
 	if card.has_method("set_hovered"):
 		card.set_hovered(false)
 
+var active
+@export var active_label: Sprite2D
+
+func set_active():
+	if active != 0:
+		active_label.visible = true
+		active_label.texture = load("res://Art/Card/division" +  str(active) + ".png")
+	else:
+		active_label.visible = false
+
 func finish_targeting():
 	var card_played = false
+	var combo_triggered = false
 	
+	# === 1. SPRAWDZENIE COMBO ===
+	# Sprawdzamy czy karta ma wymagany kolor i czy pokrywa się z aktualnym 'active'
+	# Zakładamy, że 0 oznacza brak koloru, więc ignorujemy zera.
+	if targeting_card.cost_color != null and targeting_card.cost_color != 0 and targeting_card.cost_color == active:
+		combo_triggered = true
+		active = 0
+		set_active()
+	# === 2. GŁÓWNY EFEKT KARTY ===
 	if targeting_card.put_type == 0:
-		# 1. KARTA CELOWANA W KONKRETNEGO PRZECIWNIKA
+		# KARTA CELOWANA W KONKRETNEGO PRZECIWNIKA
 		var target_enemy = hovering_enemy_check()
 		if target_enemy:
 			print("TRAFIONO PRZECIWNIKA: ", target_enemy.name)
 			if target_enemy.has_method("take_damage"): 
 				target_enemy.take(targeting_card)
+				if combo_triggered:
+					trigger_combo_effect(target_enemy) # Odpalamy combo w ten sam cel
 				card_played = true
 		else:
 			print("Strzelono w puste pole. Karta wraca do ręki.")
 			
 	elif targeting_card.put_type == 1:
-		# 2. KARTA NA GRACZA (np. Leczenie, Tarcza, Dobieranie)
+		# KARTA NA GRACZA (np. Leczenie, Tarcza, Dobieranie)
 		print("ZAGRANO KARTĘ NA GRACZA: ", targeting_card.name)
 		player.take(targeting_card)
+		if combo_triggered:
+			trigger_combo_effect()
 		card_played = true
 		
 	elif targeting_card.put_type == 2:
-		# 3. KARTA OBSZAROWA (Atakuje wszystkich wrogów)
+		# KARTA OBSZAROWA (Atakuje wszystkich wrogów)
 		print("ZAGRANO KARTĘ OBSZAROWĄ (Wszyscy wrogowie)!")
 		if game_manager.enemies.size() > 0:
 			for enemy in game_manager.enemies:
 				enemy.take(targeting_card)
+			if combo_triggered:
+				trigger_combo_effect() # Dla AoE wróg nie jest potrzebny do zmiennej
 			card_played = true
 		else:
 			print("Brak przeciwników do ataku.")
 			
 	elif targeting_card.put_type == 3:
-		# 4. KARTA W LOSOWEGO WROGA
+		# KARTA W LOSOWEGO WROGA
 		print("ZAGRANO KARTĘ W LOSOWEGO WROGA!")
 		if game_manager.enemies.size() > 0:
 			var random_enemy = game_manager.enemies.pick_random()
 			print("Wylosowano: ", random_enemy.name)
 			random_enemy.take(targeting_card)
+			if combo_triggered:
+				trigger_combo_effect(random_enemy) # Odpalamy combo w wylosowanego
 			card_played = true
 		else:
 			print("Brak przeciwników do ataku.")
 
-	# Jeśli karta została poprawnie użyta: zabieramy manę i usuwamy ją z ręki
+	# === 3. CZYSZCZENIE I AKTUALIZACJA ZMIENNYCH ===
 	if card_played:
+		# Dopiero teraz, PO zagraniu karty i ocenie Combo, zmieniamy kolor stołu
+		if targeting_card.active != null and targeting_card.active != 0:
+			active = targeting_card.active
+			if has_method("set_active"):
+				set_active()
+			
+		# Pobranie many i wyrzucenie karty na śmietnik
 		game_manager.mana -= int(targeting_card.cost)
 		discard.add_to_discard(targeting_card)
 		hand.recalculate_positions()
 	
-	# Na koniec zawsze anulujemy tryb celowania (sprzątamy po sobie)
 	cancel_targeting()
+
+# === NOWA FUNKCJA DO ROZPATRYWANIA COMBO ===
+func trigger_combo_effect(target_enemy = null):
+	if targeting_card.effect_extra == null:
+		return
+		
+	# Tworzymy "wirtualną" kartę tylko z dodatkowym efektem
+	var extra_card = {"effect": targeting_card.effect_extra}
+	var extra_type = targeting_card.effect_extra[0]
+	
+	print("COMBO AKTYWNE! Dodatkowy efekt: ", targeting_card.effect_extra)
+	
+	# Typy 1 (Tarcza), 2 (Dobieranie), 3 (Leczenie) -> Zawsze trafiają w gracza!
+	if extra_type == 1 or extra_type == 2 or extra_type == 3:
+		player.take(extra_card)
+		
+	# Typ 0 (Obrażenia) -> Trafia w to samo, co cel główny karty
+	elif extra_type == 0:
+		if targeting_card.put_type == 0 and target_enemy:
+			target_enemy.take(extra_card)
+		elif targeting_card.put_type == 2:
+			for enemy in game_manager.enemies:
+				enemy.take(extra_card)
+		elif targeting_card.put_type == 3 and target_enemy:
+			target_enemy.take(extra_card)
 
 func cancel_targeting():
 	targeting_card = null
