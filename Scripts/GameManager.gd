@@ -8,8 +8,12 @@ extends Node
 @export var shuffle_button: Button # NOWE: Przycisk za 3 many do odzyskiwania kart
 @export var mana_manager: Node2D
 @export var player: Node2D
-@export var enemies: Array[Node]
 @export var card_manager: Node2D
+
+@export var enemies: Array[Node] # Tablica, która teraz będzie wypełniana automatycznie
+@export var enemy_scene: PackedScene # Scena .tscn z Twoim przeciwnikiem
+@export var spawn_start_position: Vector2 = Vector2(1300, 500) # Środek prawej strony ekranu (zmień pod swoją rozdzielczość)
+@export var spawn_spacing: float = 300.0 # Odstęp między przeciwnikami
 
 # Prosta maszyna stanów
 enum State { PLAYER_START, PLAYER_ACTION, ENEMY_TURN }
@@ -28,17 +32,54 @@ func _ready():
 	if end_turn_button:
 		end_turn_button.pressed.connect(_on_end_turn_button_pressed)
 		
-	# NOWE: Podłączenie przycisku tasowania
 	if shuffle_button:
 		shuffle_button.pressed.connect(_on_shuffle_button_pressed)
 		
-	# Upewniamy się, że wszyscy mają standardowe kolory na starcie
 	player.modulate = Color(1, 1, 1)
-	for enemy in enemies:
-		enemy.modulate = Color(1, 1, 1)
-		
+	
+	# === TWORZYMY HORDĘ WROGÓW ===
+	spawn_horde(0)
+	
 	await get_tree().create_timer(0.5).timeout
 	start_player_turn()
+
+# NOWA FUNKCJA TWORZĄCA WROGÓW
+func spawn_horde(horde_id: int):
+	enemies.clear() # Czyścimy starych wrogów
+	
+	const EnemyDatabase = preload("res://Scripts/EnemyDatabase.gd")
+	if not EnemyDatabase.HORD.has(horde_id):
+		push_error("Brak hordy o ID: " + str(horde_id))
+		return
+		
+	var horde = EnemyDatabase.HORD[horde_id]
+	var enemy_count = horde.size()
+	
+	# Szerokość całej grupy, byśmy mogli ich idealnie wyśrodkować
+	var total_width = (enemy_count - 1) * spawn_spacing
+	var start_x = spawn_start_position.x - (total_width / 2.0)
+	
+	for i in range(enemy_count):
+		var enemy_id = horde[i]
+		
+		# Tworzymy nowego przeciwnika ze sceny
+		var enemy_inst = enemy_scene.instantiate()
+		
+		# Dodajemy go do sceny (możesz też stworzyć pusty Node2D "Enemies" i dać 'enemies_parent.add_child(enemy_inst)')
+		add_child(enemy_inst)
+		
+		# Podpinamy zmienne
+		enemy_inst.player = player
+		enemy_inst.modulate = Color(1, 1, 1)
+		
+		# Ustawiamy statystyki z bazy danych
+		enemy_inst.setup(enemy_id)
+		
+		# Ustawiamy go na planszy - układając od lewej do prawej
+		enemy_inst.global_position = Vector2(start_x + (i * spawn_spacing), spawn_start_position.y)
+		
+		# Dodajemy go do oficjalnej tury
+		enemies.append(enemy_inst)
 	
 func _process(delta: float) -> void:
 	mana_manager.set_mana(mana)

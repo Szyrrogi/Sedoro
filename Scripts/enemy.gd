@@ -4,8 +4,13 @@ extends Character
 @export var status_text: RichTextLabel
 @export var status_art: Sprite2D
 
+# NOWE: Referencja do głównego obrazka przeciwnika, by móc go podmieniać
+@export var sprite: Sprite2D 
+
 const CardDatabase = preload("res://Scripts/CardDatabase.gd")
-var deck_data = [1, 2]
+const EnemyDatabase = preload("res://Scripts/EnemyDatabase.gd") # NOWE
+
+var deck_data = []
 
 # Zmienne przechowujące ZAPLANOWANĄ akcję (zamiar przeciwnika)
 var planned_card_id = -1
@@ -14,6 +19,30 @@ var planned_put_type = -1
 
 func _ready():
 	super()
+	# UWAGA: Usunięto stąd plan_next_action(). Wywoła się dopiero po wczytaniu talii!
+
+# NOWA FUNKCJA: Wczytuje dane wroga po stworzeniu go przez GameManager
+func setup(enemy_id: int):
+	var data = EnemyDatabase.ENEMY[enemy_id]
+	# data = ["Wąż", "Enemy1", 10, [101,101,102]] (czyli [Nazwa, Obrazek, Zdrowie, Deck])
+	
+	self.name = data[0]
+	
+	# Ustawienie zdrowia (zmienne dziedziczone z klasy Character)
+	max_health = data[2]
+	current_health = max_health
+	if health_bar:
+		health_bar.max_value = max_health
+		health_bar.value = current_health
+		
+	# Skopiowanie talii z bazy
+	deck_data = data[3].duplicate()
+	
+	# Podmiana grafiki wroga
+	if sprite:
+		sprite.texture = load("res://Art/Enemy/" + str(data[1]) + ".png")
+		
+	# Losujemy pierwszy ruch po ustawieniu wszystkiego!
 	plan_next_action()
 
 # Funkcja wywoływana, gdy nadchodzi tura przeciwnika
@@ -61,20 +90,19 @@ func plan_next_action():
 	planned_effect = card_data[6]
 	
 	# Aktualizacja interfejsu (pokazanie intencji)
-	update_intent_ui()
-
-func update_intent_ui():
-	# Wyświetlenie ikony i wartości ataku/obrony
-	status_text.text = "[font_size=155]" + str(planned_effect[1])
+	status_text.text = "[font_size=100]" + str(planned_effect[1])
 	status_art.texture = load("res://Art/Stats/Status" + str(planned_effect[0]) + ".png")
 
 func die():
-	print("Przeciwnik pokonany!")
-	visible = false
-	$Area2D.set_deferred("monitorable", false)
-	$Area2D.set_deferred("monitoring", false)
+	print("Przeciwnik ", self.name, " został pokonany!")
 	
-	if hit_sound and hit_sound.playing:
-		await hit_sound.finished
+	# Szukamy GameManagera na scenie
+	var game_manager = get_tree().root.find_child("GameManager", true, false)
+	
+	# Jeśli znaleźliśmy GameManager i ten przeciwnik jest na liście, usuwamy go
+	if game_manager and game_manager.enemies.has(self):
+		game_manager.enemies.erase(self)
+		print("Usunięto wroga z listy enemies. Pozostało wrogów: ", game_manager.enemies.size())
 		
-	queue_free()
+	# Na koniec wywołujemy die() z character.gd, co fizycznie usunie go z gry (queue_free)
+	super()

@@ -1,7 +1,7 @@
 [gd_scene load_steps=9 format=3 uid="uid://ckx1a5k12nwo2"]
 
-[ext_resource type="Texture2D" uid="uid://dbqlgbbmlq1d3" path="res://Art/Enemy/enemy_test.png" id="1_m1htj"]
 [ext_resource type="Script" uid="uid://021as5ev2a7a" path="res://Scripts/enemy.gd" id="1_wovta"]
+[ext_resource type="Texture2D" uid="uid://d1i1heg1qv1x6" path="res://Art/Enemy/Enemy1.png" id="2_6bs3c"]
 [ext_resource type="Texture2D" uid="uid://cnkvfweuow6o5" path="res://Art/Misc/HP2.png" id="3_1exfc"]
 [ext_resource type="Texture2D" uid="uid://dy20rr06h88yu" path="res://Art/Misc/HP3.png" id="3_mo1ky"]
 [ext_resource type="AudioStream" uid="uid://bibt8x1d1xt5n" path="res://Art/SFX/Video-Project-2.mp3" id="3_xeo28"]
@@ -9,33 +9,37 @@
 [ext_resource type="Texture2D" uid="uid://cxe1vb7g4pk7g" path="res://Art/Stats/Status3.png" id="7_6bs3c"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wovta"]
-size = Vector2(1356, 606)
+size = Vector2(301, 254)
 
-[node name="Enemy" type="Node2D" node_paths=PackedStringArray("status_text", "status_art", "health_bar", "armor_label")]
+[node name="Enemy" type="Node2D" node_paths=PackedStringArray("status_text", "status_art", "sprite", "health_bar", "armor_label")]
+scale = Vector2(0.7, 0.7)
 script = ExtResource("1_wovta")
 status_text = NodePath("StatusCount")
 status_art = NodePath("Status")
+sprite = NodePath("Sprite2D")
 health_bar = NodePath("Area2D/TextureProgressBar")
 armor_label = NodePath("RichTextLabel")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-position = Vector2(-18.000015, -57.000004)
-scale = Vector2(1.0187829, 0.93087554)
-texture = ExtResource("1_m1htj")
+position = Vector2(-13, 112.99999)
+scale = Vector2(0.27657548, 0.34807837)
+texture = ExtResource("2_6bs3c")
 
 [node name="Area2D" type="Area2D" parent="."]
+position = Vector2(-8.293915, 339)
 collision_layer = 4
 collision_mask = 4
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
-position = Vector2(-18, -57)
+position = Vector2(-7.706085, -213)
 shape = SubResource("RectangleShape2D_wovta")
 
 [node name="TextureProgressBar" type="TextureProgressBar" parent="Area2D"]
-offset_left = -413.0
-offset_top = -445.0
-offset_right = 379.0
-offset_bottom = -384.0
+offset_left = -188.70609
+offset_top = -389.0
+offset_right = 603.29395
+offset_bottom = -316.0
+scale = Vector2(0.5, 0.5)
 texture_under = ExtResource("3_mo1ky")
 texture_over = ExtResource("3_1exfc")
 texture_progress = ExtResource("4_mo1ky")
@@ -45,22 +49,22 @@ texture_progress_offset = Vector2(6, 15)
 stream = ExtResource("3_xeo28")
 
 [node name="RichTextLabel" type="RichTextLabel" parent="."]
-offset_left = 393.0
-offset_top = -535.0
-offset_right = 623.0
-offset_bottom = -314.0
+offset_left = 202.0
+offset_top = -144.0
+offset_right = 431.99997
+offset_bottom = 77.0
 bbcode_enabled = true
 text = "[font_size=155][color=white]3"
 
 [node name="Status" type="Sprite2D" parent="."]
-position = Vector2(-56.000004, -504.00003)
-scale = Vector2(0.331235, 0.33123496)
+position = Vector2(-42.999996, -94)
+scale = Vector2(0.18000598, 0.18000597)
 texture = ExtResource("7_6bs3c")
 
 [node name="StatusCount" type="RichTextLabel" parent="."]
-offset_left = 17.0
-offset_top = -613.0
-offset_right = 247.0
-offset_bottom = -392.0
+offset_left = 4.0
+offset_top = -163.0
+offset_right = 168.0
+offset_bottom = -16.0
 bbcode_enabled = true
-text = "="
+text = "[font_size=100]2"

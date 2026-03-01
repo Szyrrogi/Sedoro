@@ -13,7 +13,11 @@ const CARDS = {
 	4 : ["Zamachniecie", 2, "0", "Zadaj 2 obrażenia", [], 0, [0, 2],0],
 	5 : ["Bieg", 2, "0", "dobierz 2 karty", [1,"Dobierz Karte", [2,1]], 1, [2, 2],2],
 	6 : ["Szerokie Cięcie", 3, "0", "Zadaj wszystkim 1 obrażeń", [2,"Zadaj wszystkim 1 obrażeń", [0,1]], 2, [0, 1],0],
+	
+	101 : ["Kęs", 2, "0", "", [], 0, [0, 3],0],
+	102 : ["ArmorUp", 2, "0", "", [], 1, [1, 3],0],
 }
+
 
 
 

@@ -104,7 +104,7 @@ position = Vector2(899.29, 905)
 scale = Vector2(0.6, 0.6)
 script = ExtResource("8_344ge")
 
-[node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("deck", "hand", "discard", "end_turn_button", "shuffle_button", "mana_manager", "player", "enemies", "card_manager")]
+[node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("deck", "hand", "discard", "end_turn_button", "shuffle_button", "mana_manager", "player", "card_manager")]
 script = ExtResource("9_hptm8")
 deck = NodePath("../Background/Deck")
 hand = NodePath("../Hand")
@@ -113,8 +113,8 @@ end_turn_button = NodePath("../CanvasLayer/EndTurnButton")
 shuffle_button = NodePath("../CanvasLayer/Tasuj")
 mana_manager = NodePath("../ManaManager")
 player = NodePath("../Player")
-enemies = [NodePath("../Enemy")]
 card_manager = NodePath("../CardManager")
+enemy_scene = ExtResource("12_6iyac")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -133,7 +133,8 @@ offset_bottom = 747.0
 text = "Tasuj"
 
 [node name="Enemy" parent="." node_paths=PackedStringArray("player") instance=ExtResource("12_6iyac")]
-position = Vector2(1458, 518)
+visible = false
+position = Vector2(2394, 641)
 scale = Vector2(0.6, 0.6)
 player = NodePath("../Player")
 

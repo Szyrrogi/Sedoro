@@ -25,7 +25,7 @@ func set_armor():
 	if current_armor == 0:
 		armor_label.text=""
 	else:
-		armor_label.text = "[font_size=155][color=white]" + str(current_armor)
+		armor_label.text = "[font_size=100][color=white]" + str(current_armor)
 
 func add_armor(amount: int = 10):
 	print("ddd")
