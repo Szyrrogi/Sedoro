@@ -23,7 +23,7 @@ const HAND_LIMIT = 5
 const CARDS_PER_TURN = 3
 const CARDS_START = 4 # Nowa stała dla pierwszej tury
 const MANA_MAX = 5
-const SHUFFLE_COST = 3 # Koszt przetasowania kart z odrzuconych do talii
+const SHUFFLE_COST = 2 # Koszt przetasowania kart z odrzuconych do talii
 
 var is_first_turn: bool = true # Flaga sprawdzająca, czy to początek gry
 var mana = 6
@@ -100,10 +100,15 @@ func _on_shuffle_button_pressed():
 		mana -= SHUFFLE_COST
 		print("Ręczne przenoszenie odrzuconych kart do talii...")
 		
-		# POPRAWKA: Używamy gotowej funkcji, którą masz już w Deck.gd!
-		deck.reshuffle_from_discard()
+		await deck.reshuffle_from_discard()
+		
+		var new_cards = deck.draw_cards(1)
+		
+		if new_cards.size() > 0:
+			var new_card = new_cards[0]
+			hand.add_card(new_card)
 			
-		print("Karty przetasowane! Pozostała mana: ", mana)
+		print("Karty przetasowane i dobrano 1 kartę! Pozostała mana: ", mana)
 
 func _on_end_turn_button_pressed():
 	if current_state == State.PLAYER_ACTION:
@@ -115,6 +120,7 @@ func start_player_turn():
 	current_state = State.PLAYER_START
 	print("\n--- POCZĄTEK TURY GRACZA ---")
 	mana = MANA_MAX
+	card_manager.redraws_used = 0
 	player.start_tunr() # Zachowałem Twoją oryginalną literówkę w nazwie funkcji ;)
 	
 	# NOWE: Podświetlenie gracza podczas jego tury (lekko jaśniejszy)

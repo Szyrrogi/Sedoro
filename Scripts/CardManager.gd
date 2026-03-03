@@ -26,6 +26,11 @@ var targeting_card: Node2D = null
 var screen_size: Vector2
 
 @export var player: Node2D
+@export var deck: Node2D
+
+var redraws_used: int = 0
+const MAX_REDRAWS: int = 2
+
 
 func _ready():
 	await get_tree().process_frame
@@ -290,7 +295,30 @@ func _on_left_release():
 func _on_card_right_clicked(card):
 	if targeting_card: return
 	if card.get_parent() == hand:
-		toggle_card_selection(card)
+		replace_card(card)
+
+# [NOWE] Logika wymiany karty
+func replace_card(card):
+	# 1. Sprawdzenie limitu wymian
+	if redraws_used >= MAX_REDRAWS:
+		print("Wykorzystano limit wymian w tej turze (2/2)!")
+		return
+		
+	print("Wymiana karty: ", card.name)
+	
+	# 2. Przeniesienie karty na cmentarz
+	discard.add_to_discard(card)
+	
+	# 3. Dobranie nowej karty i dodanie jej do ręki
+	var new_cards = deck.draw_cards(1)
+	if new_cards.size() > 0:
+		var new_card = new_cards[0]
+		hand.add_card(new_card) # To brakujący element układanki!
+		
+	# 4. Przeliczenie pozycji w ręce i aktualizacja licznika
+	hand.recalculate_positions()
+	redraws_used += 1
+	print("Użyto wymian: ", redraws_used, "/", MAX_REDRAWS)
 
 func toggle_card_selection(card):
 	if card.is_selected:

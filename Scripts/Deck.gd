@@ -6,6 +6,7 @@ extends Node2D
 var deck_data = [1,1,1,2,3,4,4,5,6] # Przykładowe dane startowe
 var card_database_reference = preload("res://Scripts/CardDatabase.gd")
 
+
 func _ready():
 	randomize()
 	deck_data.shuffle()
@@ -43,6 +44,7 @@ func reshuffle_from_discard():
 	deck_data.shuffle()
 	
 	print("Przetasowano! Nowa ilość kart: ", deck_data.size())
+
 	update_visuals()
 
 func animate_reshuffle(count: int):

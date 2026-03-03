@@ -87,9 +87,10 @@ position = Vector2(899.00006, 905)
 scale = Vector2(0.6, 0.6)
 script = ExtResource("5_d1ilt")
 
-[node name="CardManager" type="Node2D" parent="." node_paths=PackedStringArray("player", "active_label")]
+[node name="CardManager" type="Node2D" parent="." node_paths=PackedStringArray("player", "deck", "active_label")]
 script = ExtResource("6_6iyac")
 player = NodePath("../Player")
+deck = NodePath("../Background/Deck")
 active_label = NodePath("../Background/Bonus")
 
 [node name="ArrowSprite" type="Sprite2D" parent="CardManager"]
