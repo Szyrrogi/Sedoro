@@ -1,7 +1,7 @@
 [gd_scene load_steps=8 format=3 uid="uid://blplkuxn65mic"]
 
 [ext_resource type="Script" uid="uid://buqojbcrs78pv" path="res://Scripts/Player.gd" id="1_xloa1"]
-[ext_resource type="Texture2D" uid="uid://cl7hski3kjjxc" path="res://Art/Enemy/Hero_1.png" id="2_xloa1"]
+[ext_resource type="Texture2D" uid="uid://calrkwnnr5kom" path="res://Art/Enemy/Hero2.3.png" id="2_xloa1"]
 [ext_resource type="Texture2D" uid="uid://dy20rr06h88yu" path="res://Art/Misc/HP3.png" id="3_peemv"]
 [ext_resource type="Texture2D" uid="uid://cnkvfweuow6o5" path="res://Art/Misc/HP2.png" id="4_omicx"]
 [ext_resource type="Texture2D" uid="uid://g8vqqr0y2dlb" path="res://Art/Misc/HP0.png" id="5_8au8k"]

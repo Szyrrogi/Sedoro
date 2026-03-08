@@ -78,7 +78,7 @@ texture = ExtResource("4_hptm8")
 
 [node name="Bonus" type="Sprite2D" parent="Background"]
 visible = false
-position = Vector2(287, 140.00002)
+position = Vector2(894.99994, 723.00006)
 scale = Vector2(0.59, 0.93564355)
 texture = ExtResource("17_h1bgf")
 

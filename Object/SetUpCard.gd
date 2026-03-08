@@ -47,6 +47,6 @@ func set_up(_id : int):
 	name_label.text = "[font_size=55][color=black]" + card_name
 	description_label.text = "[font_size=55][color=black]" + main_effect
 	description2_label.text = "[font_size=55][color=black]" + secondary_effect
-	var path_to_image = "res://Art/Card/Art" + art_name + ".png"
+	var path_to_image = "res://Art/Card/" + art_name + ".png"
 	# Magiczna funkcja load() zamienia napis na obrazek
 	art_label.texture = load(path_to_image)
