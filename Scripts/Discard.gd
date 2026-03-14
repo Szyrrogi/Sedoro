@@ -13,11 +13,22 @@ func add_to_discard(card: Node2D):
 		push_error("Karta bez ID! Dodaję 0.")
 		discard_data.append(0)
 	
-	# Animacja wlotu do discardu (opcjonalna, szybka)
+	# --- ZMIANA: Przejęcie karty z ręki do węzła Discard ---
+	var start_global_pos = card.global_position
+	var parent = card.get_parent()
+	if parent:
+		parent.remove_child(card) # Odpinamy z ręki, więc zniknie z get_children() w Hand
+	
+	add_child(card) # Podpinamy pod Discard
+	card.global_position = start_global_pos # Przywracamy pozycję ekranową, żeby karta nie przeskoczyła
+	# -------------------------------------------------------
+	
+	# Animacja wlotu do discardu
 	var tween = create_tween()
-	tween.tween_property(card, "position", Vector2.ZERO, 0.2)
+	# Teraz Vector2.ZERO oznacza środek stosu Discard, a nie środek ręki
+	tween.tween_property(card, "position", Vector2.ZERO, 0.2) 
 	tween.tween_property(card, "scale", Vector2(0.1, 0.1), 0.2)
-	tween.tween_callback(card.queue_free) # Po animacji -> USUŃ Z PAMIĘCI
+	tween.tween_callback(card.queue_free) 
 	
 	update_visuals()
 
