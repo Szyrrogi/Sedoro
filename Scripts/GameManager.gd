@@ -207,8 +207,17 @@ func start_enemy_turn():
 		if is_instance_valid(enemy): 
 			enemy.modulate = Color(1.5, 1.5, 1.5)
 			enemy.action()
+			
 			await get_tree().create_timer(1).timeout
-			enemy.modulate = Color(1, 1, 1)
+			
+			# --- ZMIANA: Zabezpieczenie po odczekaniu czasu ---
+			# Sprawdzamy, czy po tej 1 sekundzie wróg nadal istnieje
+			if is_instance_valid(enemy):
+				enemy.modulate = Color(1, 1, 1)
+				
+			# Jeśli wróg zabił się o nas i wygraliśmy walkę, natychmiast przerywamy pętlę!
+			if current_state == State.BATTLE_ENDED:
+				break
 		
 	await get_tree().create_timer(1).timeout
 	
