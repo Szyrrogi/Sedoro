@@ -1,8 +1,8 @@
 extends Node2D
 
 @onready var input_manager = $"../InputManager"
-@onready var hand = $"../Hand"
-@onready var discard = $"../Background/Discard"
+@onready var hand = $"../WALKA/Hand"
+@onready var discard = $"../WALKA/Discard"
 @onready var game_manager = $"../GameManager"
 
 @onready var arrow_sprite: Sprite2D = $ArrowSprite
@@ -180,8 +180,15 @@ func finish_targeting():
 		# KARTA OBSZAROWA (Atakuje wszystkich wrogów)
 		print("ZAGRANO KARTĘ OBSZAROWĄ (Wszyscy wrogowie)!")
 		if game_manager.enemies.size() > 0:
-			for enemy in game_manager.enemies:
-				enemy.take(targeting_card)
+			
+			# --- ZMIANA TUTAJ: Dodajemy .duplicate() ---
+			var wrogowie_do_zranienia = game_manager.enemies.duplicate()
+			
+			for enemy in wrogowie_do_zranienia:
+				# Zabezpieczenie przed zadawaniem obrażeń już usuniętym wrogom
+				if is_instance_valid(enemy):
+					enemy.take(targeting_card)
+					
 			if combo_triggered:
 				trigger_combo_effect() # Dla AoE wróg nie jest potrzebny do zmiennej
 			card_played = true

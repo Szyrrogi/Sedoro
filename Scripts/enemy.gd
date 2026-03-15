@@ -104,5 +104,10 @@ func die():
 		game_manager.enemies.erase(self)
 		print("Usunięto wroga z listy enemies. Pozostało wrogów: ", game_manager.enemies.size())
 		
+		# --- NOWY KOD: Sprawdzenie wygranej ---
+		if game_manager.enemies.size() == 0:
+			game_manager.win_battle()
+		# --------------------------------------
+			
 	# Na koniec wywołujemy die() z character.gd, co fizycznie usunie go z gry (queue_free)
 	super()

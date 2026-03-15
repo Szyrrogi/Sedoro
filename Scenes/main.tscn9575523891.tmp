@@ -88,6 +88,7 @@ position = Vector2(563, 544)
 scale = Vector2(0.5, 0.5)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="WALKA"]
+visible = false
 
 [node name="EndTurnButton" type="Button" parent="WALKA/CanvasLayer"]
 offset_left = 48.0
@@ -147,22 +148,16 @@ script = ExtResource("8_344ge")
 [node name="MAPA" type="Node2D" parent="."]
 
 [node name="ScrollContainer" type="ScrollContainer" parent="MAPA"]
-offset_left = 409.0
-offset_right = 2320.0
+offset_right = 1911.0
 offset_bottom = 705.0
 
-[node name="MapArea" type="Control" parent="MAPA/ScrollContainer" node_paths=PackedStringArray("game_manager", "walka_node", "mapa_node")]
-custom_minimum_size = Vector2(1000, 700)
+[node name="MapArea" type="Control" parent="MAPA/ScrollContainer"]
+custom_minimum_size = Vector2(1000, 900)
 layout_mode = 2
 script = ExtResource("16_b3802")
-game_manager = NodePath("../../../GameManager")
-walka_node = NodePath("../../../WALKA")
-mapa_node = NodePath("../..")
 
-[node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("walka_node", "mapa_node", "deck", "hand", "discard", "end_turn_button", "shuffle_button", "mana_manager", "player", "card_manager")]
+[node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("deck", "hand", "discard", "end_turn_button", "shuffle_button", "mana_manager", "player", "card_manager")]
 script = ExtResource("9_hptm8")
-walka_node = NodePath("../WALKA")
-mapa_node = NodePath("../MAPA")
 deck = NodePath("../WALKA/Deck")
 hand = NodePath("../WALKA/Hand")
 discard = NodePath("../WALKA/Discard")

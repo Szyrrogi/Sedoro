@@ -9,3 +9,8 @@ func _ready():
 func die():
 	print("aha umarlem se xd")
 	# tu możesz np. odpalić ekran game over
+	
+	# Dopisz to gdzieś w pliku Player.gd
+func reset_combat_stats():
+	print("Resetuję statystyki bojowe gracza...")
+	self.current_armor = 0 
