@@ -13,6 +13,8 @@ const CARDS = {
 	4 : ["Cios Piescią", 2, "CiosPiescia", "Zadaj 3 obrażenia", [], 0, [0, 3],0],
 	5 : ["Zbieranie Aury", 2, "ZbieranieAury", "dobierz 2 karty", [1,"Dobierz Karte", [2,1]], 1, [2, 2],2],
 	6 : ["Wymach Ogonem", 2, "WymachOgonem", "Zadaj wszystkim 1 obrażeń", [2,"Zadaj wszystkim 2 obrażeń", [0,2]], 2, [0, 1],0],
+	7 : ["Mikstura Życia", 2, "Blok", "Zyskujesz Regenerację 3", [], 1, [4, 3], 0],
+	8 : ["Kolczasta Zbroja", 2, "Blok", "Zyskujesz Ciernie 3", [], 1, [5, 3], 0],
 	
 	101 : ["Kęs", 2, "Art0", "", [], 0, [0, 3],0],
 	102 : ["ArmorUp", 2, "Art0", "", [], 1, [1, 3],0],
@@ -26,3 +28,5 @@ const CARDS = {
 # 1 - Zyskanie Pancerza (1, 5) <-- Zyskuje 5 pancerze
 # 2 - Dpboeranie Kart (2 , 1) <-- Dobranie 1 Karty
 # 3 - zadawanie obrażeń (3, 4) <-- 4 leczenia
+# 4 - Regeneracja (4, 3) <-- Nadaje 3 ładunki regeneracji
+# 5 - Ciernie (5, 3) <-- Nadaje 3 ładunki cierni 
