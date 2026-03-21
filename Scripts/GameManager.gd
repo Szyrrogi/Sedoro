@@ -169,12 +169,11 @@ func start_player_turn():
 	if final_draw_count > 0:
 		print("Dobieram: ", final_draw_count, " kart.")
 		var new_cards = await deck.draw_cards(final_draw_count)
-		
 		for card in new_cards:
 			hand.add_card(card)
 			await get_tree().create_timer(0.2).timeout
 	else:
-		print("Ręka pełna! Masz 5 kart, więc nic nie dostajesz.")
+		print("Nic nie dobierasz! (Ręka pełna lub redukcja dobierania)")
 	
 	is_first_turn = false 
 	current_state = State.PLAYER_ACTION

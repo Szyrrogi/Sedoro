@@ -6,6 +6,9 @@ var current_health: int
 var current_armor: int
 var regeneration_stacks: int = 0
 var thorns_stacks: int = 0
+var weakness_stacks: int = 0
+var draw_reduction_stacks: int = 0 
+@export var weakness_label: RichTextLabel
 @export var thorns_label: RichTextLabel
 @export var health_bar: TextureProgressBar
 @onready var hit_sound: AudioStreamPlayer2D = $HitSound
@@ -22,7 +25,11 @@ func _ready():
 func start_tunr():
 	print("")
 	#set_armor()
-	
+
+	if weakness_stacks > 0:
+		weakness_stacks -= 1
+		set_weakness()
+		
 	# --- LOGIKA REGENERACJI ---
 	if regeneration_stacks > 0:
 		print("Regeneracja leczy o: ", regeneration_stacks)
@@ -77,33 +84,91 @@ func add_thorns(amount: int):
 	set_thorns()
 
 func take(card):
-	print(card.effect)
+	# Determine if 'card' is a Dictionary (with an 'effect' key) or a raw Array
+	var effect_data
+	var is_thorns = false
 	
-	if card.effect[0] == 0:
-		# Używamy get(), żeby bezpiecznie pobrać właściwość bez błędu, jeśli nie istnieje
-		var is_from_thorns = card.get("is_thorns") == true 
-		take_damage(card.effect[1], is_from_thorns) # Przekazujemy flagę do take_damage
+	if card is Array:
+		effect_data = card
+	else:
+		effect_data = card.effect
+		is_thorns = card.get("is_thorns") == true
+
+	print(effect_data)
+	
+	# Now use 'effect_data' instead of 'card.effect'
+	if effect_data[0] == 0:
+		take_damage(effect_data[1], is_thorns) 
 		
-	elif card.effect[0] == 1:
-		add_armor(card.effect[1])
+	elif effect_data[0] == 1:
+		add_armor(effect_data[1])
 		
-	elif card.effect[0] == 2: # NOWY EFEKT: Dobieranie kart
-		# Sprawdzamy czy postać otrzymująca efekt to Gracz
-		# Zwróć uwagę, czy Twój węzeł Gracza na scenie na pewno nazywa się "Player"
+	elif effect_data[0] == 2:
 		if self.name == "Player" or self.is_in_group("Player"): 
-			print("Gracz dobiera ", card.effect[1], " kart!")
-			draw_cards_for_player(card.effect[1])
-		else:
-			print("Przeciwnik używa karty dobierania, ale nie robi to na nim wrażenia.")
+			draw_cards_for_player(effect_data[1])
 			
-	elif card.effect[0] == 3:
-		heal(card.effect[1])
+	elif effect_data[0] == 3:
+		heal(effect_data[1])
 		
-	elif card.effect[0] == 4: 
-		add_regeneration(card.effect[1])
+	elif effect_data[0] == 4: 
+		add_regeneration(effect_data[1])
 		
-	elif card.effect[0] == 5:
-		add_thorns(card.effect[1])
+	elif effect_data[0] == 5:
+		add_thorns(effect_data[1])
+		
+	elif effect_data[0] == 6:
+		for i in range(1, effect_data.size()):
+			take(effect_data[i])
+			
+	elif effect_data[0] == 7: # Otrzymujesz ciernie równe pancerzowi
+		add_thorns(current_armor)
+		
+	elif effect_data[0] == 8: # Zadaj tyle obrażeń, ile masz armora
+		var game_manager = get_tree().root.find_child("GameManager", true, false)
+		if game_manager and game_manager.player:
+			take_damage(game_manager.player.current_armor)
+			
+	elif effect_data[0] == 9: # Tracisz połowę życia, podwajasz armor
+		var hp_loss = int(current_health / 2)
+		current_health -= hp_loss
+		if health_bar: health_bar.value = current_health
+		add_armor(current_armor)
+		
+	elif effect_data[0] == 10: # Utrata całego pancerza i zadanie takich obrażeń (Dla ataku AoE)
+		var game_manager = get_tree().root.find_child("GameManager", true, false)
+		if game_manager and game_manager.player:
+			var dmg = game_manager.player.current_armor
+			take_damage(dmg)
+			# Ponieważ ten atak trafia wielu wrogów, pancerz gracza zerujemy w CardManagerze
+			
+	elif effect_data[0] == 11: # Dobierasz 1 mniej karte, 3 armora
+		var game_manager = get_tree().root.find_child("GameManager", true, false)
+		if game_manager and game_manager.player:
+			game_manager.player.draw_reduction_stacks += 1
+			game_manager.player.add_armor(3)
+			
+	elif effect_data[0] == 12: # Kombinacja: jeśli min 1 cierni, 1 pancerz, 1 regen, uderz za X
+		var game_manager = get_tree().root.find_child("GameManager", true, false)
+		if game_manager and game_manager.player:
+			var p = game_manager.player
+			if p.thorns_stacks >= 1 and p.current_armor >= 1 and p.regeneration_stacks >= 1:
+				take_damage(effect_data[1])
+				
+	elif effect_data[0] == 13: # Warunkowy zwrot many: Uderz za X. Jeśli armor >= Y, oddaj Z many.
+		take_damage(effect_data[1])
+		var game_manager = get_tree().root.find_child("GameManager", true, false)
+		if game_manager and game_manager.player:
+			if game_manager.player.current_armor >= effect_data[2]:
+				game_manager.mana += effect_data[3]
+				game_manager.mana_manager.set_mana(game_manager.mana)
+				
+	elif effect_data[0] == 14: # Nadanie armora GRACZOWI podczas ataku na przeciwnika
+		var game_manager = get_tree().root.find_child("GameManager", true, false)
+		if game_manager and game_manager.player:
+			game_manager.player.add_armor(effect_data[1])
+			
+	elif effect_data[0] == 15: # Nałóż osłabienie
+		add_weakness(effect_data[1])
 
 # Funkcja pomocnicza odnajdująca menadżera i dodająca karty do ręki
 func draw_cards_for_player(amount: int):
@@ -143,6 +208,18 @@ func take_damage(amount: int = 10, is_from_thorns: bool = false):
 		
 	if current_health <= 0:
 		die()
+		
+func set_weakness():
+	if not weakness_label: return
+	if weakness_stacks <= 0:
+		weakness_label.text = ""
+	else:
+		weakness_label.text = "[font_size=100][color=purple]" + str(weakness_stacks)
+
+func add_weakness(amount: int):
+	weakness_stacks += amount
+	print(self.name, " zyskuje Osłabienie! Aktualne ładunki: ", weakness_stacks)
+	set_weakness()
 
 func trigger_thorns():
 	print(self.name, " odpala Ciernie! Zadaje ", thorns_stacks, " obrażeń.")
