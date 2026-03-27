@@ -25,7 +25,7 @@ var current_state = State.PLAYER_START
 const HAND_LIMIT = 5
 const CARDS_PER_TURN = 3
 const CARDS_START = 4 
-const MANA_MAX = 5
+const MANA_MAX = 6
 const SHUFFLE_COST = 2 
 
 var is_first_turn: bool = true 
