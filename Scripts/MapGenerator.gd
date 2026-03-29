@@ -1,34 +1,135 @@
 extends Control
 
-# --- WĘZŁY DO PRZECIĄGNIĘCIA W INSPEKTORZE ---
-@export var game_manager: Node   # Skrypt GameManager
-@export var walka_node: Node     # Cały duży węzeł WALKA
-@export var mapa_node: Node      # Cały duży węzeł MAPA
+# --- NODES TO ASSIGN IN INSPECTOR ---
+@export var game_manager: Node   # GameManager script (handles combat)
+@export var combat_node: Node    # Main COMBAT node
+@export var map_node: Node       # Main MAP node
+
+# === ENEMY PREVIEW VARIABLES ===
+@export var enemy_icons: Array[Texture2D] # Drag images here! Index 0 = enemy ID 0, etc.
+
+var map_enemies = {} 
+var tooltip_panel: PanelContainer 
+var tooltip_label: Label 
+var tooltip_icons_container: HBoxContainer # Container for horizontally aligned icons
+# ============================================
 
 const MIN_POS = 0
 const MAX_POS = 6
 
-var map_nodes = {} # Słownik: klucz to Vector2(poziom, pozycja), wartość to typ pokoju
-var map_edges = [] # Tablica słowników: {"from": Vector2, "to": Vector2}
-var current_node = Vector2.ZERO # (0,0) oznacza, że jeszcze nie zaczęliśmy
+var map_nodes = {} # Dictionary: key is Vector2(level, position), value is room type
+var map_edges = [] # Array of dictionaries: {"from": Vector2, "to": Vector2}
+
+var current_node = Vector2.ZERO # (0,0) means we haven't started yet
 
 var is_dragging_map = false
 var last_mouse_pos = Vector2.ZERO
-var has_dragged_significantly = false # <--- DODAJ TĘ LINIJKĘ
+var has_dragged_significantly = false 
 
 func _ready():
 	randomize()
+	_create_tooltip_ui() # Create hidden tooltip window
+	
 	generate_map()
+	assign_enemies_to_rooms() # Roll enemies for the entire map
 	draw_map_visuals()
 	
-	# Automatycznie przewijamy na sam dół (do poziomu 1) przy starcie
+	# Automatically scroll to the bottom (level 1) on start
 	await get_tree().process_frame
 	var scroll = get_parent()
 	if scroll is ScrollContainer:
 		scroll.scroll_vertical = int(scroll.get_v_scroll_bar().max_value)
 
 # ==========================================
-# 1. LOGIKA GENEROWANIA 
+# TOOLTIP PREVIEW SYSTEM
+# ==========================================
+
+func _create_tooltip_ui():
+	# 1. Create a new layer that always draws on top
+	var tooltip_layer = CanvasLayer.new()
+	tooltip_layer.layer = 128 # Very high value to cover everything
+	add_child(tooltip_layer)
+	
+	tooltip_panel = PanelContainer.new()
+	
+	var vbox = VBoxContainer.new()
+	tooltip_panel.add_child(vbox)
+	
+	tooltip_label = Label.new()
+	tooltip_label.add_theme_font_size_override("font_size", 20) 
+	tooltip_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(tooltip_label)
+	
+	tooltip_icons_container = HBoxContainer.new()
+	tooltip_icons_container.alignment = BoxContainer.ALIGNMENT_CENTER 
+	tooltip_icons_container.add_theme_constant_override("separation", 10) 
+	vbox.add_child(tooltip_icons_container)
+	
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0, 0, 0, 0.9)
+	style.content_margin_left = 20
+	style.content_margin_right = 20
+	style.content_margin_top = 15
+	style.content_margin_bottom = 15
+	style.corner_radius_top_left = 8
+	style.corner_radius_top_right = 8
+	style.corner_radius_bottom_left = 8
+	style.corner_radius_bottom_right = 8
+	tooltip_panel.add_theme_stylebox_override("panel", style)
+	
+	tooltip_panel.visible = false
+	tooltip_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	
+	# 2. Add the panel to the highest layer instead of the map directly
+	tooltip_layer.add_child(tooltip_panel)
+
+func assign_enemies_to_rooms():
+	map_enemies.clear()
+	for grid_pos in map_nodes.keys():
+		# Check if GameManager has the function we wrote
+		if game_manager and game_manager.has_method("get_random_enemy_encounter"):
+			map_enemies[grid_pos] = game_manager.get_random_enemy_encounter()
+		else:
+			# Fallback if GameManager is not updated or linked
+			map_enemies[grid_pos] = [0] 
+
+func _process(delta):
+	if tooltip_panel and tooltip_panel.visible:
+		# In CanvasLayer we use viewport (screen) coordinates directly
+		var mouse_position = get_viewport().get_mouse_position()
+		tooltip_panel.position = mouse_position + Vector2(15, 15)
+
+func _on_node_hovered(grid_pos: Vector2):
+	if map_enemies.has(grid_pos):
+		var enemies_list = map_enemies[grid_pos]
+		
+		tooltip_label.text = "Enemies:"
+		
+		for child in tooltip_icons_container.get_children():
+			child.queue_free()
+			
+		for enemy_id in enemies_list:
+			var icon_rect = TextureRect.new()
+			
+			if enemy_id < enemy_icons.size() and enemy_icons[enemy_id] != null:
+				icon_rect.texture = enemy_icons[enemy_id]
+			else:
+				push_warning("Missing icon for enemy ID: ", enemy_id)
+				
+			# Resize icons
+			icon_rect.custom_minimum_size = Vector2(75, 75)
+			icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			
+			tooltip_icons_container.add_child(icon_rect)
+			
+		tooltip_panel.visible = true
+
+func _on_node_unhovered():
+	tooltip_panel.visible = false
+
+# ==========================================
+# 1. MAP GENERATION LOGIC 
 # ==========================================
 
 func get_room_type() -> int:
@@ -52,19 +153,16 @@ func generate_random_level(prev_lvl: int, curr_lvl: int):
 	for pos in prev_nodes:
 		var created_connection = false
 		
-		# prosto
 		if randf() < 0.80:
 			map_nodes[Vector2(curr_lvl, pos)] = get_room_type()
 			add_edge(Vector2(prev_lvl, pos), Vector2(curr_lvl, pos))
 			created_connection = true
 			
-		# lewo
 		if pos > MIN_POS and randf() < 0.60:
 			map_nodes[Vector2(curr_lvl, pos - 1)] = get_room_type()
 			add_edge(Vector2(prev_lvl, pos), Vector2(curr_lvl, pos - 1))
 			created_connection = true
 			
-		# prawo
 		if pos < MAX_POS and randf() < 0.60:
 			map_nodes[Vector2(curr_lvl, pos + 1)] = get_room_type()
 			add_edge(Vector2(prev_lvl, pos), Vector2(curr_lvl, pos + 1))
@@ -126,7 +224,7 @@ func generate_map():
 		add_edge(Vector2(7, p7), Vector2(8, 3))
 
 # ==========================================
-# 2. WIZUALIZACJA I RYSOWANIE
+# 2. VISUALS AND DRAWING
 # ==========================================
 
 func grid_to_pixel(grid_pos: Vector2) -> Vector2:
@@ -161,32 +259,40 @@ func draw_map_visuals():
 			5: color = Color("FDFD96") 
 		btn.modulate = color
 		
+		# Hover signals
+		btn.mouse_entered.connect(_on_node_hovered.bind(grid_pos))
+		btn.mouse_exited.connect(_on_node_unhovered)
+		
 		btn.pressed.connect(_on_node_clicked.bind(grid_pos, room_type))
 		btn.set_meta("grid_pos", grid_pos)
 		
-		# Żeby przyciski nie blokowały przeciągania mapy, dodajemy:
 		btn.mouse_filter = Control.MOUSE_FILTER_PASS 
 		add_child(btn)
 		
 	update_path_visuals()
 
 # ==========================================
-# 3. INTERAKCJA I PORUSZANIE SIĘ
+# 3. INTERACTION AND MOVEMENT
 # ==========================================
 
 func _on_node_clicked(grid_pos: Vector2, room_type: int):
-	# ZMIANA TUTAJ: Sprawdzamy nową zmienną
 	if has_dragged_significantly:
-		print("Kliknięcie zignorowane - gracz przesuwał mapę.")
+		print("Click ignored - user was dragging the map.")
 		return
 		
 	if is_move_valid(grid_pos):
 		current_node = grid_pos
-		print("Przeszedłeś na poziom: ", grid_pos.x, " pokój typu: ", room_type)
+		print("Moved to level: ", grid_pos.x, " room type: ", room_type)
 		update_path_visuals()
-		trigger_room_action(room_type)
+		
+		# Get enemy array for this specific room
+		var room_enemies = []
+		if map_enemies.has(grid_pos):
+			room_enemies = map_enemies[grid_pos]
+			
+		trigger_room_action(room_type, room_enemies)
 	else:
-		print("Nie możesz tam pójść! Wybierz połączony punkt wyżej.")
+		print("You cannot go there! Choose a connected node above.")
 
 func is_move_valid(target_pos: Vector2) -> bool:
 	if current_node == Vector2.ZERO:
@@ -209,30 +315,29 @@ func update_path_visuals():
 				if node_pos.x <= current_node.x:
 					child.disabled = true
 
-func trigger_room_action(room_type: int):
-	print("Mapa: Bezpośrednio odpalam walkę typu: ", room_type)
-	if game_manager and walka_node and mapa_node:
-		mapa_node.hide()   # Ukrywamy mapę
-		walka_node.show()  # Pokazujemy arenę walki
-		game_manager.start_combat(1) # Odpalamy funkcję w GameManagerze
+func trigger_room_action(room_type: int, room_enemies: Array):
+	print("Map: Triggering room type: ", room_type)
+	if game_manager and combat_node and map_node:
+		# Hide map, show arena, pass array to combat system
+		map_node.hide()   
+		combat_node.show()  
+		game_manager.start_combat(room_enemies) 
 	else:
-		push_error("BŁĄD: Nie przeciągnąłeś węzłów do MapGeneratora w Inspektorze!")
+		push_error("ERROR: Nodes not assigned in Map Inspector!")
 
-# Opcjonalne: Przeciąganie mapy myszką
 func _gui_input(event):
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed:
 				is_dragging_map = true
 				last_mouse_pos = event.global_position
-				has_dragged_significantly = false # Resetujemy przy nowym kliknięciu
+				has_dragged_significantly = false 
 			else:
 				is_dragging_map = false
 				
 	elif event is InputEventMouseMotion and is_dragging_map:
 		var delta = last_mouse_pos - event.global_position
 		
-		# Jeśli przesunęliśmy myszkę o więcej niż 5 pikseli, to na pewno przeciągamy mapę, a nie klikamy
 		if delta.length() > 5:
 			has_dragged_significantly = true
 			

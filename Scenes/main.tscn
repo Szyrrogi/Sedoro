@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3 uid="uid://cj07e7tcxt8aw"]
+[gd_scene load_steps=30 format=3 uid="uid://cj07e7tcxt8aw"]
 
 [ext_resource type="Texture2D" uid="uid://dh5pmnobyuurf" path="res://Art/Background/BackgroundUp1.png" id="2_344ge"]
 [ext_resource type="Script" uid="uid://deppbi7l0j7k7" path="res://Scripts/Deck.gd" id="3_344ge"]
@@ -9,7 +9,7 @@
 [ext_resource type="Script" uid="uid://6cb8fvhsqqxy" path="res://Scripts/Discard.gd" id="5_hptm8"]
 [ext_resource type="Script" uid="uid://ddv4xrav0k0nn" path="res://Scripts/CardManager.gd" id="6_6iyac"]
 [ext_resource type="Script" uid="uid://bis87dtjlud6o" path="res://Scripts/Hand.gd" id="8_344ge"]
-[ext_resource type="Script" uid="uid://d1cut2x4sevqo" path="res://Scripts/GameManager.gd" id="9_hptm8"]
+[ext_resource type="Script" uid="uid://bxa5ha1a8ilpr" path="res://Scripts/GameManager.gd" id="9_hptm8"]
 [ext_resource type="Texture2D" uid="uid://ct720m5onx1yg" path="res://Art/Background/przykladowa.png" id="9_ynf5e"]
 [ext_resource type="Texture2D" uid="uid://27mhuwaghgc0" path="res://Art/Misc/Strzauka6.png" id="10_fdnlq"]
 [ext_resource type="PackedScene" uid="uid://ckx1a5k12nwo2" path="res://Scenes/Enemy.tscn" id="12_6iyac"]
@@ -18,6 +18,16 @@
 [ext_resource type="Script" uid="uid://duu618euuy4dm" path="res://Scripts/MapGenerator.gd" id="16_b3802"]
 [ext_resource type="PackedScene" uid="uid://blplkuxn65mic" path="res://Scenes/Character.tscn" id="16_k12tt"]
 [ext_resource type="Texture2D" uid="uid://co2hcc6ymaiom" path="res://Art/Card/division1.png" id="17_h1bgf"]
+[ext_resource type="Texture2D" uid="uid://d1i1heg1qv1x6" path="res://Art/Enemy/Enemy1.png" id="17_hibaj"]
+[ext_resource type="Texture2D" uid="uid://dg1kkfi6xm3to" path="res://Art/Enemy/Enemy2.png" id="18_pdsj5"]
+[ext_resource type="Texture2D" uid="uid://c55177sb70o7b" path="res://Art/Enemy/Enemy3.png" id="19_ueoa1"]
+[ext_resource type="Texture2D" uid="uid://b7smj1qi3ipj6" path="res://Art/Enemy/Enemy4.png" id="20_6vcvc"]
+[ext_resource type="Texture2D" uid="uid://clewo2qhsinj8" path="res://Art/Enemy/Enemy5.png" id="21_7k868"]
+[ext_resource type="Texture2D" uid="uid://bgem4ea6np0xu" path="res://Art/Enemy/Enemy6.png" id="22_hpc6h"]
+[ext_resource type="Texture2D" uid="uid://w7j34bp00hiu" path="res://Art/Enemy/Enemy7.png" id="23_kltya"]
+[ext_resource type="Texture2D" uid="uid://bec7hcxnd1dud" path="res://Art/Enemy/Enemy8.png" id="24_e08e2"]
+[ext_resource type="Texture2D" uid="uid://ctpmllugs5lew" path="res://Art/Enemy/Enemy9.png" id="25_neg2b"]
+[ext_resource type="Texture2D" uid="uid://k2tjpuhr1qta" path="res://Art/Enemy/Enemy10.png" id="26_r33sp"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hptm8"]
 size = Vector2(191, 269)
@@ -151,18 +161,19 @@ offset_left = 409.0
 offset_right = 2320.0
 offset_bottom = 705.0
 
-[node name="MapArea" type="Control" parent="MAPA/ScrollContainer" node_paths=PackedStringArray("game_manager", "walka_node", "mapa_node")]
+[node name="MapArea" type="Control" parent="MAPA/ScrollContainer" node_paths=PackedStringArray("game_manager", "combat_node", "map_node")]
 custom_minimum_size = Vector2(1000, 700)
 layout_mode = 2
 script = ExtResource("16_b3802")
 game_manager = NodePath("../../../GameManager")
-walka_node = NodePath("../../../WALKA")
-mapa_node = NodePath("../..")
+combat_node = NodePath("../../../WALKA")
+map_node = NodePath("../..")
+enemy_icons = Array[Texture2D]([ExtResource("17_hibaj"), ExtResource("18_pdsj5"), ExtResource("19_ueoa1"), ExtResource("20_6vcvc"), ExtResource("21_7k868"), ExtResource("22_hpc6h"), ExtResource("23_kltya"), ExtResource("24_e08e2"), ExtResource("25_neg2b"), ExtResource("26_r33sp")])
 
-[node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("walka_node", "mapa_node", "deck", "hand", "discard", "end_turn_button", "shuffle_button", "mana_manager", "player", "card_manager")]
+[node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("combat_node", "map_node", "deck", "hand", "discard", "end_turn_button", "shuffle_button", "mana_manager", "player", "card_manager")]
 script = ExtResource("9_hptm8")
-walka_node = NodePath("../WALKA")
-mapa_node = NodePath("../MAPA")
+combat_node = NodePath("../WALKA")
+map_node = NodePath("../MAPA")
 deck = NodePath("../WALKA/Deck")
 hand = NodePath("../WALKA/Hand")
 discard = NodePath("../WALKA/Discard")
