@@ -1,4 +1,4 @@
-[gd_scene load_steps=30 format=3 uid="uid://cj07e7tcxt8aw"]
+[gd_scene load_steps=31 format=3 uid="uid://cj07e7tcxt8aw"]
 
 [ext_resource type="Texture2D" uid="uid://dh5pmnobyuurf" path="res://Art/Background/BackgroundUp1.png" id="2_344ge"]
 [ext_resource type="Script" uid="uid://deppbi7l0j7k7" path="res://Scripts/Deck.gd" id="3_344ge"]
@@ -9,7 +9,7 @@
 [ext_resource type="Script" uid="uid://6cb8fvhsqqxy" path="res://Scripts/Discard.gd" id="5_hptm8"]
 [ext_resource type="Script" uid="uid://ddv4xrav0k0nn" path="res://Scripts/CardManager.gd" id="6_6iyac"]
 [ext_resource type="Script" uid="uid://bis87dtjlud6o" path="res://Scripts/Hand.gd" id="8_344ge"]
-[ext_resource type="Script" uid="uid://bxa5ha1a8ilpr" path="res://Scripts/GameManager.gd" id="9_hptm8"]
+[ext_resource type="Script" uid="uid://d1cut2x4sevqo" path="res://Scripts/GameManager.gd" id="9_hptm8"]
 [ext_resource type="Texture2D" uid="uid://ct720m5onx1yg" path="res://Art/Background/przykladowa.png" id="9_ynf5e"]
 [ext_resource type="Texture2D" uid="uid://27mhuwaghgc0" path="res://Art/Misc/Strzauka6.png" id="10_fdnlq"]
 [ext_resource type="PackedScene" uid="uid://ckx1a5k12nwo2" path="res://Scenes/Enemy.tscn" id="12_6iyac"]
@@ -28,6 +28,7 @@
 [ext_resource type="Texture2D" uid="uid://bec7hcxnd1dud" path="res://Art/Enemy/Enemy8.png" id="24_e08e2"]
 [ext_resource type="Texture2D" uid="uid://ctpmllugs5lew" path="res://Art/Enemy/Enemy9.png" id="25_neg2b"]
 [ext_resource type="Texture2D" uid="uid://k2tjpuhr1qta" path="res://Art/Enemy/Enemy10.png" id="26_r33sp"]
+[ext_resource type="Script" uid="uid://dgn47fbhmhne4" path="res://Scripts/PassiveManager.gd" id="29_6vcvc"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hptm8"]
 size = Vector2(191, 269)
@@ -170,7 +171,7 @@ combat_node = NodePath("../../../WALKA")
 map_node = NodePath("../..")
 enemy_icons = Array[Texture2D]([ExtResource("17_hibaj"), ExtResource("18_pdsj5"), ExtResource("19_ueoa1"), ExtResource("20_6vcvc"), ExtResource("21_7k868"), ExtResource("22_hpc6h"), ExtResource("23_kltya"), ExtResource("24_e08e2"), ExtResource("25_neg2b"), ExtResource("26_r33sp")])
 
-[node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("combat_node", "map_node", "deck", "hand", "discard", "end_turn_button", "shuffle_button", "mana_manager", "player", "card_manager")]
+[node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("combat_node", "map_node", "deck", "hand", "discard", "end_turn_button", "shuffle_button", "mana_manager", "player", "card_manager", "passive_manager")]
 script = ExtResource("9_hptm8")
 combat_node = NodePath("../WALKA")
 map_node = NodePath("../MAPA")
@@ -182,4 +183,8 @@ shuffle_button = NodePath("../WALKA/CanvasLayer/Tasuj")
 mana_manager = NodePath("../WALKA/ManaManager")
 player = NodePath("../WALKA/Player")
 card_manager = NodePath("../CardManager")
+passive_manager = NodePath("passibeManager")
 enemy_scene = ExtResource("12_6iyac")
+
+[node name="passibeManager" type="Node" parent="GameManager"]
+script = ExtResource("29_6vcvc")

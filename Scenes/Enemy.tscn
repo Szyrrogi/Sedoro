@@ -12,7 +12,7 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wovta"]
 size = Vector2(301, 254)
 
-[node name="Enemy" type="Node2D" node_paths=PackedStringArray("status_text", "status_art", "sprite", "armor_sprite", "health_bar", "armor_label")]
+[node name="Enemy" type="Node2D" node_paths=PackedStringArray("status_text", "status_art", "sprite", "armor_sprite", "health_bar", "white_health_bar", "armor_label", "regen_label", "poison_label")]
 scale = Vector2(0.7, 0.7)
 script = ExtResource("1_wovta")
 status_text = NodePath("StatusCount")
@@ -20,8 +20,11 @@ status_art = NodePath("Status")
 sprite = NodePath("Sprite2D")
 armor_sprite = NodePath("Area2D/Sprite2D")
 armor_health_color = Color(0.8973476, 0.43729925, 1, 1)
-health_bar = NodePath("Area2D/TextureProgressBar")
+health_bar = NodePath("Area2D/hit bar")
+white_health_bar = NodePath("Area2D/TextureProgressBar")
 armor_label = NodePath("RichTextLabel")
+regen_label = NodePath("PoisonLabel")
+poison_label = NodePath("PoisonLabel")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 position = Vector2(-13, 112.99999)
@@ -45,6 +48,18 @@ offset_bottom = -321.7143
 scale = Vector2(0.5, 0.5)
 value = 33.0
 texture_under = ExtResource("3_mo1ky")
+texture_over = ExtResource("3_1exfc")
+texture_progress = ExtResource("4_mo1ky")
+texture_progress_offset = Vector2(6, 15)
+tint_progress = Color(18.892157, 18.892157, 18.892157, 1)
+
+[node name="hit bar" type="TextureProgressBar" parent="Area2D"]
+offset_left = -188.84894
+offset_top = -394.71423
+offset_right = 603.15106
+offset_bottom = -321.71423
+scale = Vector2(0.5, 0.5)
+value = 33.0
 texture_over = ExtResource("3_1exfc")
 texture_progress = ExtResource("4_mo1ky")
 texture_progress_offset = Vector2(6, 15)
@@ -78,3 +93,10 @@ offset_right = 168.0
 offset_bottom = -16.0
 bbcode_enabled = true
 text = "[font_size=100]2"
+
+[node name="PoisonLabel" type="RichTextLabel" parent="."]
+offset_left = -175.71428
+offset_top = -134.2857
+offset_right = -80.0
+offset_bottom = -47.142853
+text = "2"
