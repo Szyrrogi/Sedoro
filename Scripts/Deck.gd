@@ -17,10 +17,14 @@ func draw_cards(amount: int) -> Array:
 	var drawn_cards = []
 	
 	for i in range(amount):
-		# SPRAWDZANIE CZY MAMY KARTY
+		# Jeśli talia pusta — automatycznie tasujemy odrzucone (jak w Slay the Spire)
 		if deck_data.is_empty():
-			print("Talia pusta! Brak kart do dobrania. Użyj przycisku, aby przetasować odrzucone.")
-			break # Przerywamy dobieranie, NIE tasujemy automatycznie!
+			if discard_ref and discard_ref.discard_data.size() > 0:
+				print("Talia pusta! Automatyczne tasowanie odrzuconych kart...")
+				await reshuffle_from_discard()
+			else:
+				print("Talia pusta i brak kart w odrzuconych. Nie można dobrać więcej.")
+				break
 		
 		# Dobieranie właściwe
 		var card_id = deck_data.pop_front()
@@ -48,40 +52,31 @@ func reshuffle_from_discard():
 	update_visuals()
 
 func animate_reshuffle(count: int):
-	# Tworzymy kilka "fejkowych" kart, które lecą z Discardu do Decku
-	var visuals_count = min(count, 5) # Max 5 sprite'ów, żeby nie zabić wydajności
+	var visuals_count = min(count, 5)
 	
 	for i in range(visuals_count):
 		var fake_card = Sprite2D.new()
-		# Ustaw teksturę rewersu karty
-		# fake_card.texture = load("res://tyl_karty.png") 
-		# Na razie użyjmy placeholder:
 		fake_card.texture = load("res://icon.svg") # Zmień na swoją ikonę karty!
-		fake_card.scale = Vector2(0.2, 0.2) # Dopasuj skalę
+		fake_card.scale = Vector2(0.2, 0.2)
 		
-		get_tree().root.add_child(fake_card) # Dodajemy do roota, żeby latały nad wszystkim
+		get_tree().root.add_child(fake_card)
 		fake_card.global_position = discard_ref.global_position
 		
 		var tween = create_tween()
-		# Losowy czas i lekki rozrzut, żeby nie leciały w linii
 		var duration = randf_range(0.3, 0.6)
 		tween.tween_property(fake_card, "global_position", global_position, duration).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
-		tween.tween_callback(fake_card.queue_free) # Usuń fejk po dolocie
+		tween.tween_callback(fake_card.queue_free)
 		
-		# Czekamy chwilkę między kartami
 		await get_tree().create_timer(0.1).timeout
 	
-	# Czekamy na koniec ostatniej animacji
 	await get_tree().create_timer(0.5).timeout
 
 func create_card_instance(card_id) -> Node2D:
 	var card = card_scene.instantiate()
 	card.position = global_position
-	# WAŻNE: Przekazujemy ID do nowej karty
 	if card.has_method("setup_card"):
 		card.setup_card(card_id)
 	return card
 
 func update_visuals():
-	# Ukryj/Pokaż talię
 	visible = !deck_data.is_empty()

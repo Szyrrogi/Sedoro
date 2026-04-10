@@ -31,6 +31,8 @@ var screen_size: Vector2
 var redraws_used: int = 0
 const MAX_REDRAWS: int = 2
 
+const DISCARD_MANA_GAIN = 2  # Mana za odrzucenie karty prawym klikiem
+
 
 func _ready():
 	await get_tree().process_frame
@@ -47,7 +49,6 @@ func _ready():
 func _process(delta):
 	# --- 1. OBSŁUGA STRZAŁKI CELOWANIA ---
 	if targeting_card and arrow_sprite:
-		# Rysujemy strzałkę TYLKO jeśli put_type wynosi 0
 		if targeting_card.put_type == 0:
 			if arrow_sprite.texture != null:
 				var mouse_pos = get_global_mouse_position()
@@ -56,10 +57,8 @@ func _process(delta):
 					clamp(mouse_pos.y, 0, screen_size.y)
 				)
 				
-				# Najpierw liczymy dystans
 				var distance = targeting_card.global_position.distance_to(target_pos)
 				
-				# --- WARUNEK: MARTWA STREFA ---
 				if distance < MIN_ARROW_DISTANCE:
 					arrow_sprite.visible = false 
 				else:
@@ -73,10 +72,8 @@ func _process(delta):
 						arrow_sprite.scale.x = distance / texture_width
 						arrow_sprite.scale.y = 0.3 
 		else:
-			# Jeśli put_type jest inny niż 0, upewniamy się, że strzałka jest ukryta
 			arrow_sprite.visible = false
 		
-		# ZATRZYMUJEMY KOD TUTAJ - jak celujemy, karta nie reaguje na drag i hover
 		return
 
 	# --- 2. SPRAWDZANIE PRZYTRZYMANIA (Hold -> Drag) ---
@@ -100,7 +97,6 @@ func _process(delta):
 	if new_hovered_card != hovered_card:
 		if hovered_card and hovered_card.has_method("set_hovered"):
 			hovered_card.set_hovered(false) 
-		# Nie powiększaj karty, którą aktualnie celujemy
 		if new_hovered_card and new_hovered_card.has_method("set_hovered") and new_hovered_card != targeting_card:
 			new_hovered_card.set_hovered(true) 
 		hovered_card = new_hovered_card
@@ -121,7 +117,6 @@ func _input(event):
 func start_targeting(card):
 	targeting_card = card
 	
-	# === ZMIANA: Pokaż strzałkę tylko, jeśli typ to 0 ===
 	if arrow_sprite:
 		if card.put_type == 0:
 			arrow_sprite.visible = true
@@ -148,28 +143,24 @@ func finish_targeting():
 	var combo_triggered = false
 	
 	# === 1. SPRAWDZENIE COMBO ===
-	# Sprawdzamy czy karta ma wymagany kolor i czy pokrywa się z aktualnym 'active'
-	# Zakładamy, że 0 oznacza brak koloru, więc ignorujemy zera.
 	if targeting_card.cost_color != null and targeting_card.cost_color != 0 and targeting_card.cost_color == active:
 		combo_triggered = true
 		active = 0
 		set_active()
 	# === 2. GŁÓWNY EFEKT KARTY ===
 	if targeting_card.put_type == 0:
-		# KARTA CELOWANA W KONKRETNEGO PRZECIWNIKA
 		var target_enemy = hovering_enemy_check()
 		if target_enemy:
 			print("TRAFIONO PRZECIWNIKA: ", target_enemy.name)
 			if target_enemy.has_method("take_damage"): 
 				target_enemy.take(targeting_card)
 				if combo_triggered:
-					trigger_combo_effect(target_enemy) # Odpalamy combo w ten sam cel
+					trigger_combo_effect(target_enemy)
 				card_played = true
 		else:
 			print("Strzelono w puste pole. Karta wraca do ręki.")
 			
 	elif targeting_card.put_type == 1:
-		# KARTA NA GRACZA (np. Leczenie, Tarcza, Dobieranie)
 		print("ZAGRANO KARTĘ NA GRACZA: ", targeting_card.name)
 		player.take(targeting_card)
 		if combo_triggered:
@@ -177,68 +168,55 @@ func finish_targeting():
 		card_played = true
 		
 	elif targeting_card.put_type == 2:
-		# KARTA OBSZAROWA (Atakuje wszystkich wrogów)
 		print("ZAGRANO KARTĘ OBSZAROWĄ (Wszyscy wrogowie)!")
 		if game_manager.enemies.size() > 0:
-			
-			# --- ZMIANA TUTAJ: Dodajemy .duplicate() ---
 			var wrogowie_do_zranienia = game_manager.enemies.duplicate()
-			
 			for enemy in wrogowie_do_zranienia:
-				# Zabezpieczenie przed zadawaniem obrażeń już usuniętym wrogom
 				if is_instance_valid(enemy):
 					enemy.take(targeting_card)
-					
 			if combo_triggered:
-				trigger_combo_effect() # Dla AoE wróg nie jest potrzebny do zmiennej
+				trigger_combo_effect()
 			card_played = true
 		else:
 			print("Brak przeciwników do ataku.")
 			
 	elif targeting_card.put_type == 3:
-		# KARTA W LOSOWEGO WROGA
 		print("ZAGRANO KARTĘ W LOSOWEGO WROGA!")
 		if game_manager.enemies.size() > 0:
 			var random_enemy = game_manager.enemies.pick_random()
 			print("Wylosowano: ", random_enemy.name)
 			random_enemy.take(targeting_card)
 			if combo_triggered:
-				trigger_combo_effect(random_enemy) # Odpalamy combo w wylosowanego
+				trigger_combo_effect(random_enemy)
 			card_played = true
 		else:
 			print("Brak przeciwników do ataku.")
 
 	# === 3. CZYSZCZENIE I AKTUALIZACJA ZMIENNYCH ===
 	if card_played:
-		# Dopiero teraz, PO zagraniu karty i ocenie Combo, zmieniamy kolor stołu
 		if targeting_card.active != null and targeting_card.active != 0:
 			active = targeting_card.active
 			if has_method("set_active"):
 				set_active()
 			
-		# Pobranie many i wyrzucenie karty na śmietnik
 		game_manager.mana -= int(targeting_card.cost)
 		discard.add_to_discard(targeting_card)
 		hand.recalculate_positions()
 	
 	cancel_targeting()
 
-# === NOWA FUNKCJA DO ROZPATRYWANIA COMBO ===
+# === COMBO ===
 func trigger_combo_effect(target_enemy = null):
 	if targeting_card.effect_extra == null:
 		return
 		
-	# Tworzymy "wirtualną" kartę tylko z dodatkowym efektem
 	var extra_card = {"effect": targeting_card.effect_extra}
 	var extra_type = targeting_card.effect_extra[0]
 	
 	print("COMBO AKTYWNE! Dodatkowy efekt: ", targeting_card.effect_extra)
 	
-	# Typy 1 (Tarcza), 2 (Dobieranie), 3 (Leczenie) -> Zawsze trafiają w gracza!
 	if extra_type == 1 or extra_type == 2 or extra_type == 3:
 		player.take(extra_card)
-		
-	# Typ 0 (Obrażenia) -> Trafia w to samo, co cel główny karty
 	elif extra_type == 0:
 		if targeting_card.put_type == 0 and target_enemy:
 			target_enemy.take(extra_card)
@@ -299,33 +277,19 @@ func _on_left_release():
 	
 	held_card = null
 
+# Prawy klik: odrzuć kartę i daj 2 many
 func _on_card_right_clicked(card):
 	if targeting_card: return
-	if card.get_parent() == hand:
-		replace_card(card)
-
-# [NOWE] Logika wymiany karty
-func replace_card(card):
-	# 1. Sprawdzenie limitu wymian
-	if redraws_used >= MAX_REDRAWS:
-		print("Wykorzystano limit wymian w tej turze (2/2)!")
-		return
-		
-	print("Wymiana karty: ", card.name)
+	if card.get_parent() != hand: return
+	if game_manager.current_state != game_manager.State.PLAYER_ACTION: return
 	
-	# 2. Przeniesienie karty na cmentarz
+	print("Odrzucono kartę: ", card.name, " | +", DISCARD_MANA_GAIN, " many")
+	
+	# Clamp, żeby nie przekroczyć maks many
+	game_manager.mana = min(game_manager.mana + DISCARD_MANA_GAIN, game_manager.MANA_MAX)
+	
 	discard.add_to_discard(card)
-	
-	# 3. Dobranie nowej karty i dodanie jej do ręki
-	var new_cards = deck.draw_cards(1)
-	if new_cards.size() > 0:
-		var new_card = new_cards[0]
-		hand.add_card(new_card) # To brakujący element układanki!
-		
-	# 4. Przeliczenie pozycji w ręce i aktualizacja licznika
 	hand.recalculate_positions()
-	redraws_used += 1
-	print("Użyto wymian: ", redraws_used, "/", MAX_REDRAWS)
 
 func toggle_card_selection(card):
 	if card.is_selected:

@@ -10,11 +10,10 @@ extends Node
 @export var hand: Node2D
 @export var discard: Node2D
 @export var end_turn_button: Button
-@export var shuffle_button: Button 
 @export var mana_manager: Node2D
 @export var player: Node2D
 @export var card_manager: Node2D
-@export var passive_manager: Node  # NOWE: referencja do PassiveManager
+@export var passive_manager: Node
 
 @export var enemies: Array[Node] 
 @export var enemy_scene: PackedScene 
@@ -27,21 +26,15 @@ extends Node
 enum State { PLAYER_START, PLAYER_ACTION, ENEMY_TURN, BATTLE_ENDED }
 var current_state = State.PLAYER_START
 
-const HAND_LIMIT = 5
-const CARDS_PER_TURN = 3
-const CARDS_START = 4 
+const HAND_LIMIT = 10       # Maksymalna liczba kart w ręce
+const CARDS_PER_TURN = 7    # Kart dobieranych na początku tury
 const MANA_MAX = 6
-const SHUFFLE_COST = 2 
 
-var is_first_turn: bool = true 
-var mana = 6
+var mana = 0  # Tura zaczyna się z 0 many
 
 func _ready():
 	if end_turn_button:
 		end_turn_button.pressed.connect(_on_end_turn_button_pressed)
-		
-	if shuffle_button:
-		shuffle_button.pressed.connect(_on_shuffle_button_pressed)
 
 func start_combat(horde_data: Array = []):
 	print("\n--- INITIALIZING NEW COMBAT ---")
@@ -59,8 +52,7 @@ func start_combat(horde_data: Array = []):
 		await deck.reshuffle_from_discard()
 	
 	# === 2. RESET STATE ===
-	is_first_turn = true
-	mana = MANA_MAX
+	mana = 0
 	current_state = State.PLAYER_START
 	player.modulate = Color(1, 1, 1)
 	
@@ -70,7 +62,6 @@ func start_combat(horde_data: Array = []):
 		if "armor" in player: player.armor = 0
 		if "block" in player: player.block = 0
 
-	# NOWE: wyczyść pasywne z poprzedniej walki
 	if passive_manager and passive_manager.has_method("clear_all_passives"):
 		passive_manager.clear_all_passives()
 	
@@ -121,20 +112,6 @@ func spawn_horde(horde: Array):
 		
 func _process(delta: float) -> void:
 	mana_manager.set_mana(mana)
-	
-	if shuffle_button:
-		var discard_count = discard.discard_data.size()
-		shuffle_button.visible = discard_count > 0 
-		shuffle_button.disabled = mana < SHUFFLE_COST or current_state != State.PLAYER_ACTION
-
-func _on_shuffle_button_pressed():
-	if current_state == State.PLAYER_ACTION and mana >= SHUFFLE_COST:
-		mana -= SHUFFLE_COST
-		await deck.reshuffle_from_discard()
-		var new_cards = deck.draw_cards(1)
-		
-		if new_cards.size() > 0:
-			hand.add_card(new_cards[0])
 
 func _on_end_turn_button_pressed():
 	if current_state == State.PLAYER_ACTION:
@@ -143,14 +120,14 @@ func _on_end_turn_button_pressed():
 func start_player_turn():
 	current_state = State.PLAYER_START
 	print("\n--- PLAYER TURN START ---")
-	mana = MANA_MAX
+	
+	# Tura zawsze zaczyna się od 0 many
+	mana = 0
 	card_manager.redraws_used = 0
 	
-	# Reset licznika dobranych kart
 	if player and "cards_drawn_this_turn" in player:
 		player.cards_drawn_this_turn = 0
 
-	# NOWE: aktywuj efekty pasywnych kart
 	if passive_manager and passive_manager.has_method("trigger_all_passives"):
 		passive_manager.trigger_all_passives()
 
@@ -159,10 +136,11 @@ func start_player_turn():
 	
 	player.modulate = Color(1.5, 1.5, 1.5)
 	
+	# Liczymy ile miejsca zostało w ręce (maks 10)
 	var current_hand_size = hand.get_child_count()
-	var cards_to_draw = CARDS_START if is_first_turn else CARDS_PER_TURN
+	var cards_to_draw = CARDS_PER_TURN
 
-	# NOWE: uwzględnij draw_reduction (Twarda Głowa)
+	# Uwzględnij draw_reduction (np. Twarda Głowa)
 	var draw_reduction = 0
 	if player and "draw_reduction_stacks" in player:
 		draw_reduction = player.draw_reduction_stacks
@@ -181,24 +159,24 @@ func start_player_turn():
 	else:
 		print("No cards drawn!")
 	
-	is_first_turn = false 
 	current_state = State.PLAYER_ACTION
 
 func end_player_turn():
 	if current_state != State.PLAYER_ACTION:
 		return
 	
-	print("Player turn ended. Cleanup...")
+	print("Player turn ended. Discarding all cards...")
 	
 	card_manager.active = 0
 	card_manager.set_active()
-	var cards_in_hand = hand.get_all_cards().duplicate()
 	
+	# Na końcu tury WSZYSTKIE karty z ręki idą do odrzuconych
+	var cards_in_hand = hand.get_all_cards().duplicate()
 	for card in cards_in_hand:
 		if card.is_selected:
-			card.set_selected(false) 
-			hand.remove_card(card)   
-			discard.add_to_discard(card) 
+			card.set_selected(false)
+		hand.remove_card(card)
+		discard.add_to_discard(card)
 		
 	start_enemy_turn()
 
@@ -212,7 +190,6 @@ func start_enemy_turn():
 		if is_instance_valid(enemy): 
 			enemy.modulate = Color(1.5, 1.5, 1.5)
 
-			# NOWE: tury trucizny wroga na początku jego tury
 			if enemy.has_method("start_turn"):
 				enemy.start_turn()
 
