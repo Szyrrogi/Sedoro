@@ -9,10 +9,12 @@ extends Control
 @export var enemy_icons: Array[Texture2D] # Drag images here! Index 0 = enemy ID 0, etc.
 
 var map_enemies = {} 
-var tooltip_panel: PanelContainer 
-var tooltip_label: Label 
-var tooltip_icons_container: HBoxContainer # Container for horizontally aligned icons
+var preview_panel: Control # Zmieniono na zwykły Control
+var enemies_icon_container: HBoxContainer 
+var rewards_icon_container: HBoxContainer # NOWY: pojemnik na przyszłe nagrody
 # ============================================
+
+var map_rewards = {} # Słownik przechowujący wylosowane nagrody dla pokojów
 
 const MIN_POS = 0
 const MAX_POS = 6
@@ -28,13 +30,12 @@ var has_dragged_significantly = false
 
 func _ready():
 	randomize()
-	_create_tooltip_ui() # Create hidden tooltip window
+	_create_preview_ui() # Tworzymy stały panel na dole
 	
 	generate_map()
-	assign_enemies_to_rooms() # Roll enemies for the entire map
+	assign_room_data() 
 	draw_map_visuals()
 	
-	# Automatically scroll to the bottom (level 1) on start
 	await get_tree().process_frame
 	var scroll = get_parent()
 	if scroll is ScrollContainer:
@@ -44,89 +45,146 @@ func _ready():
 # TOOLTIP PREVIEW SYSTEM
 # ==========================================
 
-func _create_tooltip_ui():
-	# 1. Create a new layer that always draws on top
-	var tooltip_layer = CanvasLayer.new()
-	tooltip_layer.layer = 128 # Very high value to cover everything
-	add_child(tooltip_layer)
-	
-	tooltip_panel = PanelContainer.new()
-	
-	var vbox = VBoxContainer.new()
-	tooltip_panel.add_child(vbox)
-	
-	tooltip_label = Label.new()
-	tooltip_label.add_theme_font_size_override("font_size", 20) 
-	tooltip_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(tooltip_label)
-	
-	tooltip_icons_container = HBoxContainer.new()
-	tooltip_icons_container.alignment = BoxContainer.ALIGNMENT_CENTER 
-	tooltip_icons_container.add_theme_constant_override("separation", 10) 
-	vbox.add_child(tooltip_icons_container)
-	
-	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0, 0, 0, 0.9)
-	style.content_margin_left = 20
-	style.content_margin_right = 20
-	style.content_margin_top = 15
-	style.content_margin_bottom = 15
-	style.corner_radius_top_left = 8
-	style.corner_radius_top_right = 8
-	style.corner_radius_bottom_left = 8
-	style.corner_radius_bottom_right = 8
-	tooltip_panel.add_theme_stylebox_override("panel", style)
-	
-	tooltip_panel.visible = false
-	tooltip_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	
-	# 2. Add the panel to the highest layer instead of the map directly
-	tooltip_layer.add_child(tooltip_panel)
+# ==========================================
+# FIXED BOTTOM PREVIEW SYSTEM
+# ==========================================
 
-func assign_enemies_to_rooms():
-	map_enemies.clear()
-	for grid_pos in map_nodes.keys():
-		# Check if GameManager has the function we wrote
-		if game_manager and game_manager.has_method("get_random_enemy_encounter"):
-			map_enemies[grid_pos] = game_manager.get_random_enemy_encounter()
-		else:
-			# Fallback if GameManager is not updated or linked
-			map_enemies[grid_pos] = [0] 
+# ==========================================
+# FIXED BOTTOM PREVIEW SYSTEM
+# ==========================================
 
-func _process(delta):
-	if tooltip_panel and tooltip_panel.visible:
-		# In CanvasLayer we use viewport (screen) coordinates directly
-		var mouse_position = get_viewport().get_mouse_position()
-		tooltip_panel.position = mouse_position + Vector2(15, 15)
+func _create_preview_ui():
+	var preview_layer = CanvasLayer.new()
+	preview_layer.layer = 128 
+	add_child(preview_layer)
+	
+	preview_panel = Control.new()
+	preview_panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	preview_panel.offset_top = -350
+	preview_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE # Ignoruj myszkę
+	preview_layer.add_child(preview_panel)
+	
+	var main_hbox = HBoxContainer.new()
+	main_hbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	main_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	main_hbox.add_theme_constant_override("separation", 500)
+	main_hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE # Ignoruj myszkę
+	preview_panel.add_child(main_hbox)
+	
+	var enemies_vbox = VBoxContainer.new()
+	enemies_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	enemies_vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE # Ignoruj myszkę
+	main_hbox.add_child(enemies_vbox)
+	
+	var enemies_label = Label.new()
+	enemies_label.text = "ENEMIES"
+	enemies_label.add_theme_font_size_override("font_size", 24)
+	enemies_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	enemies_label.mouse_filter = Control.MOUSE_FILTER_IGNORE # Ignoruj myszkę
+	enemies_vbox.add_child(enemies_label)
+	
+	enemies_icon_container = HBoxContainer.new()
+	enemies_icon_container.alignment = BoxContainer.ALIGNMENT_CENTER 
+	enemies_icon_container.add_theme_constant_override("separation", 15) 
+	enemies_icon_container.custom_minimum_size = Vector2(0, 250)
+	enemies_icon_container.mouse_filter = Control.MOUSE_FILTER_IGNORE # Ignoruj myszkę
+	enemies_vbox.add_child(enemies_icon_container)
+	
+	var rewards_vbox = VBoxContainer.new()
+	rewards_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	rewards_vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE # Ignoruj myszkę
+	main_hbox.add_child(rewards_vbox)
+	
+	var rewards_label = Label.new()
+	rewards_label.text = "REWARDS"
+	rewards_label.add_theme_font_size_override("font_size", 24)
+	rewards_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	rewards_label.mouse_filter = Control.MOUSE_FILTER_IGNORE # Ignoruj myszkę
+	rewards_vbox.add_child(rewards_label)
+	
+	rewards_icon_container = HBoxContainer.new()
+	rewards_icon_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	rewards_icon_container.custom_minimum_size = Vector2(0, 250)
+	rewards_icon_container.mouse_filter = Control.MOUSE_FILTER_IGNORE # Ignoruj myszkę
+	rewards_vbox.add_child(rewards_icon_container)
+	
+	preview_panel.visible = false
 
 func _on_node_hovered(grid_pos: Vector2):
 	if map_enemies.has(grid_pos):
+		# ==========================================
+		# 1. RYSOWANIE PRZECIWNIKÓW
+		# ==========================================
 		var enemies_list = map_enemies[grid_pos]
-		
-		tooltip_label.text = "Enemies:"
-		
-		for child in tooltip_icons_container.get_children():
+		for child in enemies_icon_container.get_children():
 			child.queue_free()
 			
 		for enemy_id in enemies_list:
 			var icon_rect = TextureRect.new()
-			
 			if enemy_id < enemy_icons.size() and enemy_icons[enemy_id] != null:
 				icon_rect.texture = enemy_icons[enemy_id]
 			else:
 				push_warning("Missing icon for enemy ID: ", enemy_id)
 				
-			# Resize icons
-			icon_rect.custom_minimum_size = Vector2(75, 75)
+			icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE # Ignoruj myszkę
+			icon_rect.custom_minimum_size = Vector2(300, 300)
 			icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			enemies_icon_container.add_child(icon_rect)
 			
-			tooltip_icons_container.add_child(icon_rect)
+		# ==========================================
+		# 2. RYSOWANIE NAGRÓD (KARTY)
+		# ==========================================
+		for child in rewards_icon_container.get_children():
+			child.queue_free()
 			
-		tooltip_panel.visible = true
+		if map_rewards.has(grid_pos):
+			var rewards_list = map_rewards[grid_pos]
+			
+			# !!! PODMIEŃ NA SWOJĄ ŚCIEŻKĘ !!!
+			const SCENA_KARTY = preload("res://Object/Card.tscn")
+			
+			for card_id in rewards_list:
+				var card_wrapper = Control.new()
+				card_wrapper.mouse_filter = Control.MOUSE_FILTER_IGNORE # Ignoruj myszkę
+				card_wrapper.custom_minimum_size = Vector2(200, 300) 
+				
+				var card_inst = SCENA_KARTY.instantiate()
+				card_wrapper.add_child(card_inst)
+				card_inst.setup_card(card_id)
+				
+				card_inst.scale_normal = Vector2(0.5, 0.5)
+				card_inst.scale_hover = Vector2(0.5, 0.5)
+				card_inst.scale = Vector2(0.5, 0.5) 
+				card_inst.set_start_position(Vector2(80, 120))
+				
+				# WYŁĄCZAMY FIZYKĘ KARTY (aby Area2D wewnątrz karty nie blokowało myszki na węźle mapy!)
+				_wylacz_kolizje_dla_myszki(card_inst)
+				
+				rewards_icon_container.add_child(card_wrapper)
+				
+		preview_panel.visible = true
 
 func _on_node_unhovered():
-	tooltip_panel.visible = false
+	preview_panel.visible = false
+
+func assign_room_data():
+	map_enemies.clear()
+	map_rewards.clear()
+	for grid_pos in map_nodes.keys():
+		# Losowanie Wrogów
+		if game_manager and game_manager.has_method("get_random_enemy_encounter"):
+			map_enemies[grid_pos] = game_manager.get_random_enemy_encounter()
+		else:
+			map_enemies[grid_pos] = [0] 
+			
+		# Losowanie Nagród (Kart)
+		if game_manager and game_manager.has_method("get_random_card_rewards"):
+			map_rewards[grid_pos] = game_manager.get_random_card_rewards()
+		else:
+			map_rewards[grid_pos] = []
+
+
 
 # ==========================================
 # 1. MAP GENERATION LOGIC 
@@ -276,23 +334,29 @@ func draw_map_visuals():
 # ==========================================
 
 func _on_node_clicked(grid_pos: Vector2, room_type: int):
-	if has_dragged_significantly:
-		print("Click ignored - user was dragging the map.")
-		return
+	if has_dragged_significantly: return
 		
 	if is_move_valid(grid_pos):
 		current_node = grid_pos
-		print("Moved to level: ", grid_pos.x, " room type: ", room_type)
 		update_path_visuals()
 		
-		# Get enemy array for this specific room
 		var room_enemies = []
-		if map_enemies.has(grid_pos):
-			room_enemies = map_enemies[grid_pos]
+		if map_enemies.has(grid_pos): room_enemies = map_enemies[grid_pos]
 			
-		trigger_room_action(room_type, room_enemies)
-	else:
-		print("You cannot go there! Choose a connected node above.")
+		# POBIERAMY NAGRODY:
+		var room_rewards = []
+		if map_rewards.has(grid_pos): room_rewards = map_rewards[grid_pos]
+			
+		# PRZEKAZUJEMY NAGRODY:
+		trigger_room_action(room_type, room_enemies, room_rewards)
+
+# Dodaj trzeci argument room_rewards:
+func trigger_room_action(room_type: int, room_enemies: Array, room_rewards: Array):
+	if game_manager and combat_node and map_node:
+		map_node.hide()   
+		combat_node.show()  
+		# Jeśli masz gotową logikę obsługi wygranej, powinieneś w GameManagerze przypisać to do jakiejś zmiennej np. pending_rewards
+		game_manager.start_combat(room_enemies)
 
 func is_move_valid(target_pos: Vector2) -> bool:
 	if current_node == Vector2.ZERO:
@@ -315,15 +379,7 @@ func update_path_visuals():
 				if node_pos.x <= current_node.x:
 					child.disabled = true
 
-func trigger_room_action(room_type: int, room_enemies: Array):
-	print("Map: Triggering room type: ", room_type)
-	if game_manager and combat_node and map_node:
-		# Hide map, show arena, pass array to combat system
-		map_node.hide()   
-		combat_node.show()  
-		game_manager.start_combat(room_enemies) 
-	else:
-		push_error("ERROR: Nodes not assigned in Map Inspector!")
+
 
 func _gui_input(event):
 	if event is InputEventMouseButton:
@@ -345,3 +401,11 @@ func _gui_input(event):
 		if scroll is ScrollContainer:
 			scroll.scroll_vertical += int(delta.y)
 		last_mouse_pos = event.global_position
+
+
+# Pętla wyłączająca fizyczne klikanie nagród
+func _wylacz_kolizje_dla_myszki(wezel: Node):
+	if wezel is CollisionObject2D:
+		wezel.input_pickable = false
+	for dziecko in wezel.get_children():
+		_wylacz_kolizje_dla_myszki(dziecko)
