@@ -1,8 +1,11 @@
-
+class_name EnemyDatabase
+extends Node # lub extends Resource / Reference, w zależności od tego, czym jest
 
 const HORD = { 
 	0 : [0, 0, 0],
 	1 : [1, 1],
+	2 : [2, 2],
+	3 : [3, 4] 
 }
 
 

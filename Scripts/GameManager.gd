@@ -396,10 +396,12 @@ func kill_all_enemies():
 			enemy.die()
 
 func get_random_enemy_encounter() -> Array:
-	var possible_encounters = [
-		[0, 0, 0], [1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4],
-		[5, 5, 5], [6, 6, 6], [7, 7, 7], [8, 8, 8], [9, 9, 9],
-	]
+	#var possible_encounters = [
+		#[0, 0, 0], [1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4],
+		#[5, 5, 5], [6, 6, 6], [7, 7, 7], [8, 8, 8], [9, 9, 9],
+	#]
+	var possible_encounters = EnemyDatabase.HORD.values()
+	
 	var chosen = possible_encounters.pick_random()
 	chosen.shuffle()
 	return chosen
