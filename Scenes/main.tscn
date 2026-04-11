@@ -1,4 +1,4 @@
-[gd_scene load_steps=31 format=3 uid="uid://cj07e7tcxt8aw"]
+[gd_scene format=3 uid="uid://cj07e7tcxt8aw"]
 
 [ext_resource type="Texture2D" uid="uid://dh5pmnobyuurf" path="res://Art/Background/BackgroundUp1.png" id="2_344ge"]
 [ext_resource type="Script" uid="uid://deppbi7l0j7k7" path="res://Scripts/Deck.gd" id="3_344ge"]
@@ -9,7 +9,7 @@
 [ext_resource type="Script" uid="uid://6cb8fvhsqqxy" path="res://Scripts/Discard.gd" id="5_hptm8"]
 [ext_resource type="Script" uid="uid://ddv4xrav0k0nn" path="res://Scripts/CardManager.gd" id="6_6iyac"]
 [ext_resource type="Script" uid="uid://bis87dtjlud6o" path="res://Scripts/Hand.gd" id="8_344ge"]
-[ext_resource type="Script" uid="uid://d1cut2x4sevqo" path="res://Scripts/GameManager.gd" id="9_hptm8"]
+[ext_resource type="Script" uid="uid://bxa5ha1a8ilpr" path="res://Scripts/GameManager.gd" id="9_hptm8"]
 [ext_resource type="Texture2D" uid="uid://ct720m5onx1yg" path="res://Art/Background/przykladowa.png" id="9_ynf5e"]
 [ext_resource type="Texture2D" uid="uid://27mhuwaghgc0" path="res://Art/Misc/Strzauka6.png" id="10_fdnlq"]
 [ext_resource type="PackedScene" uid="uid://ckx1a5k12nwo2" path="res://Scenes/Enemy.tscn" id="12_6iyac"]
@@ -33,136 +33,136 @@
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hptm8"]
 size = Vector2(191, 269)
 
-[node name="Main" type="Node2D"]
+[node name="Main" type="Node2D" unique_id=15177312]
 
-[node name="InputManager" type="Node2D" parent="."]
+[node name="InputManager" type="Node2D" parent="." unique_id=1235593390]
 position = Vector2(899.00006, 905)
 scale = Vector2(0.6, 0.6)
 script = ExtResource("5_d1ilt")
 
-[node name="CardManager" type="Node2D" parent="." node_paths=PackedStringArray("player", "deck", "active_label")]
+[node name="CardManager" type="Node2D" parent="." unique_id=1333389480 node_paths=PackedStringArray("player", "deck", "active_label")]
 script = ExtResource("6_6iyac")
 player = NodePath("../WALKA/Player")
 deck = NodePath("../WALKA/Deck")
 active_label = NodePath("../Background/Bonus")
 
-[node name="ArrowSprite" type="Sprite2D" parent="CardManager"]
+[node name="ArrowSprite" type="Sprite2D" parent="CardManager" unique_id=957331414]
 visible = false
 z_index = 2000
 texture = ExtResource("10_fdnlq")
 centered = false
 offset = Vector2(220, -410)
 
-[node name="Background" type="Node2D" parent="."]
+[node name="Background" type="Node2D" parent="." unique_id=1355966234]
 
-[node name="Sprite2D" type="Sprite2D" parent="Background"]
+[node name="Sprite2D" type="Sprite2D" parent="Background" unique_id=946076424]
 position = Vector2(959.9194, 394.14255)
 scale = Vector2(0.8248115, 0.7850048)
 texture = ExtResource("2_344ge")
 
-[node name="Sprite2D2" type="Sprite2D" parent="Background"]
+[node name="Sprite2D2" type="Sprite2D" parent="Background" unique_id=663793097]
 position = Vector2(961.5, 906)
 scale = Vector2(0.78911275, 0.71681404)
 texture = ExtResource("3_ynf5e")
 
-[node name="Sprite2D3" type="Sprite2D" parent="Background"]
+[node name="Sprite2D3" type="Sprite2D" parent="Background" unique_id=1263608639]
 position = Vector2(958.8871, 818.6773)
 scale = Vector2(0.81487936, 0.7384626)
 texture = ExtResource("4_hptm8")
 
-[node name="Bonus" type="Sprite2D" parent="Background"]
+[node name="Bonus" type="Sprite2D" parent="Background" unique_id=767489830]
 visible = false
 position = Vector2(894.99994, 723.00006)
 scale = Vector2(0.59, 0.93564355)
 texture = ExtResource("17_h1bgf")
 
-[node name="WALKA" type="Node2D" parent="."]
+[node name="WALKA" type="Node2D" parent="." unique_id=1988999940]
 visible = false
 
-[node name="ManaManager" type="Node2D" parent="WALKA" node_paths=PackedStringArray("mana_sprite", "mana2_sprite")]
+[node name="ManaManager" type="Node2D" parent="WALKA" unique_id=501284432 node_paths=PackedStringArray("mana_sprite", "mana2_sprite")]
 script = ExtResource("14_wsu2k")
 mana_sprite = NodePath("Mana1")
 mana2_sprite = NodePath("Mana2")
 
-[node name="Mana2" type="Sprite2D" parent="WALKA/ManaManager"]
+[node name="Mana2" type="Sprite2D" parent="WALKA/ManaManager" unique_id=1592662986]
 position = Vector2(105, 539)
 scale = Vector2(0.2089258, 0.2089258)
 texture = ExtResource("15_k12tt")
 
-[node name="Mana1" type="Sprite2D" parent="WALKA/ManaManager"]
+[node name="Mana1" type="Sprite2D" parent="WALKA/ManaManager" unique_id=411294070]
 position = Vector2(105, 380.16)
 scale = Vector2(0.2089258, 0.2089258)
 texture = ExtResource("15_k12tt")
 
-[node name="Player" parent="WALKA" instance=ExtResource("16_k12tt")]
+[node name="Player" parent="WALKA" unique_id=909769317 instance=ExtResource("16_k12tt")]
 position = Vector2(563, 544)
 scale = Vector2(0.5, 0.5)
 
-[node name="CanvasLayer" type="CanvasLayer" parent="WALKA"]
+[node name="CanvasLayer" type="CanvasLayer" parent="WALKA" unique_id=165551466]
 
-[node name="EndTurnButton" type="Button" parent="WALKA/CanvasLayer"]
+[node name="EndTurnButton" type="Button" parent="WALKA/CanvasLayer" unique_id=656906419]
 offset_left = 48.0
 offset_top = 57.0
 offset_right = 187.0
 offset_bottom = 117.0
 text = "Next Turn "
 
-[node name="Tasuj" type="Button" parent="WALKA/CanvasLayer"]
+[node name="Tasuj" type="Button" parent="WALKA/CanvasLayer" unique_id=1843615514]
 offset_left = 136.0
 offset_top = 716.0
 offset_right = 247.0
 offset_bottom = 747.0
 text = "Tasuj"
 
-[node name="Deck" type="Node2D" parent="WALKA" node_paths=PackedStringArray("discard_ref")]
+[node name="Deck" type="Node2D" parent="WALKA" unique_id=311300741 node_paths=PackedStringArray("discard_ref")]
 position = Vector2(1747.99, 880)
 script = ExtResource("3_344ge")
 card_scene = ExtResource("4_d1ilt")
 discard_ref = NodePath("../Discard")
 
-[node name="Sprite2D" type="Sprite2D" parent="WALKA/Deck"]
+[node name="Sprite2D" type="Sprite2D" parent="WALKA/Deck" unique_id=1300134420]
 position = Vector2(-9.494939, 13.653204)
 scale = Vector2(0.38202018, 0.38384804)
 texture = ExtResource("9_ynf5e")
 
-[node name="Area2D" type="Area2D" parent="WALKA/Deck"]
+[node name="Area2D" type="Area2D" parent="WALKA/Deck" unique_id=1195094347]
 collision_layer = 4
 collision_mask = 4
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="WALKA/Deck/Area2D"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WALKA/Deck/Area2D" unique_id=947627441]
 position = Vector2(-9.48999, 13.5)
 shape = SubResource("RectangleShape2D_hptm8")
 
-[node name="Discard" type="Node2D" parent="WALKA"]
+[node name="Discard" type="Node2D" parent="WALKA" unique_id=692778021]
 position = Vector2(200, 880)
 script = ExtResource("5_hptm8")
 
-[node name="Sprite2D" type="Sprite2D" parent="WALKA/Discard"]
+[node name="Sprite2D" type="Sprite2D" parent="WALKA/Discard" unique_id=889513739]
 position = Vector2(-9.494939, 13.653204)
 scale = Vector2(0.38202018, 0.38384804)
 texture = ExtResource("9_ynf5e")
 
-[node name="Area2D" type="Area2D" parent="WALKA/Discard"]
+[node name="Area2D" type="Area2D" parent="WALKA/Discard" unique_id=136782915]
 collision_layer = 4
 collision_mask = 4
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="WALKA/Discard/Area2D"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WALKA/Discard/Area2D" unique_id=1555801561]
 position = Vector2(-9.48999, 13.5)
 shape = SubResource("RectangleShape2D_hptm8")
 
-[node name="Hand" type="Node2D" parent="WALKA"]
+[node name="Hand" type="Node2D" parent="WALKA" unique_id=2007974786]
 position = Vector2(899.29, 905)
 scale = Vector2(0.6, 0.6)
 script = ExtResource("8_344ge")
 
-[node name="MAPA" type="Node2D" parent="."]
+[node name="MAPA" type="Node2D" parent="." unique_id=1153031608]
 
-[node name="ScrollContainer" type="ScrollContainer" parent="MAPA"]
+[node name="ScrollContainer" type="ScrollContainer" parent="MAPA" unique_id=116122280]
 offset_left = 409.0
 offset_right = 2320.0
 offset_bottom = 705.0
 
-[node name="MapArea" type="Control" parent="MAPA/ScrollContainer" node_paths=PackedStringArray("game_manager", "combat_node", "map_node")]
+[node name="MapArea" type="Control" parent="MAPA/ScrollContainer" unique_id=723417149 node_paths=PackedStringArray("game_manager", "combat_node", "map_node")]
 custom_minimum_size = Vector2(1000, 700)
 layout_mode = 2
 script = ExtResource("16_b3802")
@@ -171,20 +171,39 @@ combat_node = NodePath("../../../WALKA")
 map_node = NodePath("../..")
 enemy_icons = Array[Texture2D]([ExtResource("17_hibaj"), ExtResource("18_pdsj5"), ExtResource("19_ueoa1"), ExtResource("20_6vcvc"), ExtResource("21_7k868"), ExtResource("22_hpc6h"), ExtResource("23_kltya"), ExtResource("24_e08e2"), ExtResource("25_neg2b"), ExtResource("26_r33sp")])
 
-[node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("combat_node", "map_node", "deck", "hand", "discard", "end_turn_button", "shuffle_button", "mana_manager", "player", "card_manager", "passive_manager")]
+[node name="GameManager" type="Node2D" parent="." unique_id=694064039 node_paths=PackedStringArray("reward_panel", "reward_container", "combat_node", "map_node", "deck", "hand", "discard", "end_turn_button", "mana_manager", "player", "card_manager", "passive_manager")]
 script = ExtResource("9_hptm8")
+reward_panel = NodePath("../RewardPanel")
+reward_container = NodePath("../RewardPanel/RewardContainer")
+card_scene_for_rewards = ExtResource("4_d1ilt")
 combat_node = NodePath("../WALKA")
 map_node = NodePath("../MAPA")
 deck = NodePath("../WALKA/Deck")
 hand = NodePath("../WALKA/Hand")
 discard = NodePath("../WALKA/Discard")
 end_turn_button = NodePath("../WALKA/CanvasLayer/EndTurnButton")
-shuffle_button = NodePath("../WALKA/CanvasLayer/Tasuj")
 mana_manager = NodePath("../WALKA/ManaManager")
 player = NodePath("../WALKA/Player")
 card_manager = NodePath("../CardManager")
 passive_manager = NodePath("passibeManager")
 enemy_scene = ExtResource("12_6iyac")
 
-[node name="passibeManager" type="Node" parent="GameManager"]
+[node name="passibeManager" type="Node" parent="GameManager" unique_id=974340344]
 script = ExtResource("29_6vcvc")
+
+[node name="RewardPanel" type="ColorRect" parent="." unique_id=543401895]
+visible = false
+offset_left = -2.0
+offset_top = -5.0
+offset_right = 1940.0
+offset_bottom = 1089.0
+color = Color(0.023529412, 0.023529412, 0.015686275, 0.72156864)
+
+[node name="RewardContainer" type="HBoxContainer" parent="RewardPanel" unique_id=1023466808]
+layout_mode = 0
+offset_left = 794.0
+offset_top = 290.0
+offset_right = 1240.0
+offset_bottom = 749.0
+theme_override_constants/separation = 50
+alignment = 1

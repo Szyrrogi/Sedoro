@@ -1,5 +1,12 @@
 extends Node
 
+
+@export var reward_panel: Control        # Przypisz w Inspektorze nowy panel UI!
+@export var reward_container: Container  # Przypisz w Inspektorze HBoxContainer!
+@export var card_scene_for_rewards: PackedScene # Przypisz tu swoją scenę res://Object/Card.tscn
+var pending_rewards: Array = []
+
+
 @export var use_random_encounters: bool = true
 
 # --- NODES TO ASSIGN IN INSPECTOR ---
@@ -36,10 +43,14 @@ func _ready():
 	if end_turn_button:
 		end_turn_button.pressed.connect(_on_end_turn_button_pressed)
 
-func start_combat(horde_data: Array = []):
-	print("\n--- INITIALIZING NEW COMBAT ---")
+# POPRAWIONA SYGNATURA: Musi przyjmować rewards!
+func start_combat(horde_data: Array = [], rewards: Array = []):
+	print("\n--- INICJACJA WALKI ---")
+	print("Otrzymane nagrody z mapy: ", rewards)
 	
-	# === 1. CARD CLEANUP ===
+	pending_rewards = rewards # Teraz to zadziała, bo rewards jest w nawiasie powyżej
+	
+	# === 1. CZYSZCZENIE KART ===
 	var leftover_cards = hand.get_all_cards().duplicate()
 	for card in leftover_cards:
 		card.set_selected(false)
@@ -51,33 +62,180 @@ func start_combat(horde_data: Array = []):
 	if discard.discard_data.size() > 0:
 		await deck.reshuffle_from_discard()
 	
-	# === 2. RESET STATE ===
+	# === 2. RESET STANU ===
 	mana = 0
 	current_state = State.PLAYER_START
 	player.modulate = Color(1, 1, 1)
 	
 	if player.has_method("reset_combat_stats"):
 		player.reset_combat_stats()
-	else:
-		if "armor" in player: player.armor = 0
-		if "block" in player: player.block = 0
 
 	if passive_manager and passive_manager.has_method("clear_all_passives"):
 		passive_manager.clear_all_passives()
 	
-	# === 3. START NEW ENCOUNTER ===
+	# === 3. SPAWN PRZECIWNIKÓW ===
 	spawn_horde(horde_data)
 	
 	await get_tree().create_timer(0.5).timeout
 	start_player_turn()
 
 func win_battle():
-	print("Combat won! Returning to map.")
+	print("Walka wygrana! Sprawdzam nagrody...")
 	current_state = State.BATTLE_ENDED 
 	
+	if pending_rewards.size() > 0:
+		print("Znaleziono nagrody: ", pending_rewards, ". Pokazuję ekran.")
+		show_reward_screen()
+	else:
+		print("Brak nagród dla tego pokoju. Powrót na mapę.")
+		return_to_map()
+
+func show_reward_screen():
+	if not reward_panel or not reward_container or not card_scene_for_rewards:
+		push_error("BŁĄD: Brak przypisanych węzłów UI w inspektorze GameManager!")
+		return_to_map()
+		return
+		
+	# Wymuszamy układ na środku
+	if reward_container is BoxContainer:
+		reward_container.alignment = BoxContainer.ALIGNMENT_CENTER
+		
+	# Czyścimy stare śmieci z panelu (karty)
+	for child in reward_container.get_children():
+		child.queue_free()
+		
+	# Czyścimy stary tytuł, jeśli istnieje (żeby napisy się nie nakładały)
+	for child in reward_panel.get_children():
+		if child is Label and child.name == "RewardTitle":
+			child.queue_free()
+			
+	reward_panel.show()
+	
+# --- NOWE: TWORZENIE NAPISU ---
+	var title_label = Label.new()
+	title_label.name = "RewardTitle"
+	title_label.text = "CHOOSE ONE CARD:"
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	
+	# Ustawiamy napis na górze ekranu
+	title_label.set_anchors_preset(Control.PRESET_TOP_WIDE)
+	title_label.offset_top = 100 
+	
+	# PRZESUNIĘCIE W PRAWO O 50 PIKSELI:
+	title_label.offset_left = 200
+	title_label.offset_right = 200
+	
+	# Powiększamy czcionkę
+	title_label.add_theme_font_size_override("font_size", 64) 
+	
+	# Dodajemy napis bezpośrednio do reward_panel
+	reward_panel.add_child(title_label)
+	# ------------------------------
+	# Tworzymy karty nagród
+	for card_id in pending_rewards:
+		var wrapper = Control.new()
+		wrapper.custom_minimum_size = Vector2(250, 350) 
+		
+		# 1. NAJPIERW KARTA Z TYŁU
+		var card_inst = card_scene_for_rewards.instantiate()
+		wrapper.add_child(card_inst)
+		
+		card_inst.setup_card(card_id)
+		card_inst.z_index = 100 
+		
+		if card_inst.has_method("set_start_position"):
+			card_inst.set_start_position(Vector2(125, 175))
+		else:
+			card_inst.position = Vector2(100, 175)
+			
+		card_inst.scale = Vector2(1.0, 1.0)
+		card_inst.scale_normal = Vector2(1.0, 1.0)
+		card_inst.scale_hover = Vector2(1.1, 1.1)
+		
+		_wylacz_kolizje_dla_myszki(card_inst)
+		
+		# 2. PRZYCISK CAŁKOWICIE Z PRZODU
+		var btn = Button.new()
+		btn.set_anchors_preset(Control.PRESET_FULL_RECT)
+		btn.flat = true
+		btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		btn.z_index = 101
+		btn.pressed.connect(func(): _on_reward_card_chosen(card_id))
+		wrapper.add_child(btn)
+		
+		reward_container.add_child(wrapper)
+	if not reward_panel or not reward_container or not card_scene_for_rewards:
+		push_error("BŁĄD: Brak przypisanych węzłów UI w inspektorze GameManager!")
+		return_to_map()
+		return
+		
+	# Wymuszamy układ na środku
+	if reward_container is BoxContainer:
+		reward_container.alignment = BoxContainer.ALIGNMENT_CENTER
+		
+	# Czyścimy stare śmieci z panelu
+	for child in reward_container.get_children():
+		child.queue_free()
+		
+	reward_panel.show()
+	
+	# Tworzymy karty nagród
+	for card_id in pending_rewards:
+		var wrapper = Control.new()
+		wrapper.custom_minimum_size = Vector2(250, 350) 
+		
+		# 1. NAJPIERW KARTA Z TYŁU
+		var card_inst = card_scene_for_rewards.instantiate()
+		wrapper.add_child(card_inst)
+		
+		card_inst.setup_card(card_id)
+		card_inst.z_index = 100 
+		
+		if card_inst.has_method("set_start_position"):
+			card_inst.set_start_position(Vector2(125, 175))
+		else:
+			card_inst.position = Vector2(125, 175)
+			
+		card_inst.scale = Vector2(1.0, 1.0)
+		card_inst.scale_normal = Vector2(1.0, 1.0)
+		card_inst.scale_hover = Vector2(1.1, 1.1)
+		
+		_wylacz_kolizje_dla_myszki(card_inst)
+		
+		# 2. PRZYCISK CAŁKOWICIE Z PRZODU (dodany jako ostatni, więc jest na samej górze!)
+		var btn = Button.new()
+		btn.set_anchors_preset(Control.PRESET_FULL_RECT)
+		btn.flat = true
+		btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+		btn.z_index = 101 # <--- WAŻNE: Przycisk musi mieć wyższy Z-index niż karta (100)!
+		btn.pressed.connect(func(): _on_reward_card_chosen(card_id))
+		wrapper.add_child(btn)
+		
+		reward_container.add_child(wrapper)
+
+# --- FUNKCJA POMOCNICZA ---
+# Wyłącza fizykę wewnątrz wizualnej karty, by przycisk UI działał płynnie
+func _wylacz_kolizje_dla_myszki(wezel: Node):
+	if wezel is CollisionObject2D:
+		wezel.input_pickable = false
+	for dziecko in wezel.get_children():
+		_wylacz_kolizje_dla_myszki(dziecko)
+
+func _on_reward_card_chosen(card_id: int):
+	# Gracz wybrał kartę - dodajemy do decku i wracamy na mapę
+	if deck and deck.has_method("add_card_to_deck"):
+		deck.add_card_to_deck(card_id)
+		
+	pending_rewards.clear()
+	return_to_map()
+
+func return_to_map():
+	if reward_panel:
+		reward_panel.hide()
+		
 	if combat_node and map_node:
 		combat_node.hide() 
-		map_node.show()  
+		map_node.show()
 		
 func lose_battle():
 	print("Combat lost!")
@@ -104,6 +262,7 @@ func spawn_horde(horde: Array):
 		add_child(enemy_inst)
 		
 		enemy_inst.player = player
+		enemy_inst.game_manager = self # <--- NOWA LINIJKA: GameManager przedstawia się wrogowi!
 		enemy_inst.modulate = Color(1, 1, 1)
 		enemy_inst.setup(enemy_id)
 		
@@ -218,6 +377,23 @@ func set_button_active(is_active: bool):
 func _input(event):
 	if event.is_action_pressed("ui_accept"):
 		end_player_turn()
+		
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_6:
+			kill_all_enemies()
+
+# Funkcja pomocnicza do cheatu
+func kill_all_enemies():
+	print("CHEAT: Zabijanie wszystkich wrogów!")
+	
+	# Tworzymy kopię tablicy za pomocą .duplicate()
+	# Jest to bardzo ważne, ponieważ funkcja die() usuwa wrogów z oryginalnej tablicy.
+	# Gdybyśmy nie skopiowali tablicy, pętla by się "zgubiła" w trakcie usuwania.
+	var enemies_to_kill = enemies.duplicate()
+	
+	for enemy in enemies_to_kill:
+		if is_instance_valid(enemy) and enemy.has_method("die"):
+			enemy.die()
 
 func get_random_enemy_encounter() -> Array:
 	var possible_encounters = [
@@ -227,3 +403,12 @@ func get_random_enemy_encounter() -> Array:
 	var chosen = possible_encounters.pick_random()
 	chosen.shuffle()
 	return chosen
+	
+	
+func get_random_card_rewards() -> Array:
+	# Przykładowa pula nagród (ID kart z CardDatabase)
+	var possible_rewards = [
+		[1, 2, 3], [4, 5], [1, 5, 6], [2, 7]
+	]
+	var chosen_rewards = possible_rewards.pick_random()
+	return chosen_rewards

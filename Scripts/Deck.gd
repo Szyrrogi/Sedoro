@@ -80,3 +80,7 @@ func create_card_instance(card_id) -> Node2D:
 
 func update_visuals():
 	visible = !deck_data.is_empty()
+	
+func add_card_to_deck(card_id: int):
+	deck_data.append(card_id)
+	print("Pomyślnie dodano kartę o ID: ", card_id, " do talii!")

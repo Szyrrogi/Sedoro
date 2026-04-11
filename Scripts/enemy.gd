@@ -1,5 +1,13 @@
 extends Character
 
+
+
+
+var game_manager: Node # 
+
+
+
+
 @export var player: Node2D
 @export var status_text: RichTextLabel
 @export var status_art: Sprite2D
@@ -96,18 +104,15 @@ func plan_next_action():
 func die():
 	print("Przeciwnik ", self.name, " został pokonany!")
 	
-	# Szukamy GameManagera na scenie
-	var game_manager = get_tree().root.find_child("GameManager", true, false)
-	
-	# Jeśli znaleźliśmy GameManager i ten przeciwnik jest na liście, usuwamy go
+	# Korzystamy z bezpośredniej referencji, a nie z find_child
 	if game_manager and game_manager.enemies.has(self):
 		game_manager.enemies.erase(self)
 		print("Usunięto wroga z listy enemies. Pozostało wrogów: ", game_manager.enemies.size())
 		
-		# --- NOWY KOD: Sprawdzenie wygranej ---
+		# --- Sprawdzenie wygranej ---
 		if game_manager.enemies.size() == 0:
-			game_manager.win_battle()
-		# --------------------------------------
+			# Opóźniamy nieco wywołanie win_battle, by dać pętli wroga się zakończyć
+			game_manager.call_deferred("win_battle")
 			
-	# Na koniec wywołujemy die() z character.gd, co fizycznie usunie go z gry (queue_free)
+	# Na koniec wywołujemy die() z character.gd
 	super()

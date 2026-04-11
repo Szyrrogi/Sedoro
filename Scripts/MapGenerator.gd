@@ -355,8 +355,8 @@ func trigger_room_action(room_type: int, room_enemies: Array, room_rewards: Arra
 	if game_manager and combat_node and map_node:
 		map_node.hide()   
 		combat_node.show()  
-		# Jeśli masz gotową logikę obsługi wygranej, powinieneś w GameManagerze przypisać to do jakiejś zmiennej np. pending_rewards
-		game_manager.start_combat(room_enemies)
+		# TUTA JEST KLUCZ: Musisz dodać ', room_rewards' na samym końcu!
+		game_manager.start_combat(room_enemies, room_rewards)
 
 func is_move_valid(target_pos: Vector2) -> bool:
 	if current_node == Vector2.ZERO:
