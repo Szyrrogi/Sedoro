@@ -8,21 +8,25 @@ extends Control
 # === ENEMY PREVIEW VARIABLES ===
 @export var enemy_icons: Array[Texture2D] # Drag images here! Index 0 = enemy ID 0, etc.
 
+# === NODE TYPE SPRITES ===
+# Index 0 = typ 1 (walka normalna), Index 1 = typ 2, Index 2 = typ 3, Index 3 = typ 4 (sklep), Index 4 = typ 5 (event)
+@export var node_type_sprites: Array[Texture2D]
+
 var map_enemies = {} 
-var preview_panel: Control # Zmieniono na zwykły Control
+var preview_panel: Control
 var enemies_icon_container: HBoxContainer 
-var rewards_icon_container: HBoxContainer # NOWY: pojemnik na przyszłe nagrody
+var rewards_icon_container: HBoxContainer
 # ============================================
 
-var map_rewards = {} # Słownik przechowujący wylosowane nagrody dla pokojów
+var map_rewards = {}
 
 const MIN_POS = 0
 const MAX_POS = 6
 
-var map_nodes = {} # Dictionary: key is Vector2(level, position), value is room type
-var map_edges = [] # Array of dictionaries: {"from": Vector2, "to": Vector2}
+var map_nodes = {}
+var map_edges = []
 
-var current_node = Vector2.ZERO # (0,0) means we haven't started yet
+var current_node = Vector2.ZERO
 
 var is_dragging_map = false
 var last_mouse_pos = Vector2.ZERO
@@ -30,7 +34,7 @@ var has_dragged_significantly = false
 
 func _ready():
 	randomize()
-	_create_preview_ui() # Tworzymy stały panel na dole
+	_create_preview_ui()
 	
 	generate_map()
 	assign_room_data() 
@@ -39,15 +43,8 @@ func _ready():
 	await get_tree().process_frame
 	var scroll = get_parent()
 	if scroll is ScrollContainer:
-		scroll.scroll_vertical = int(scroll.get_v_scroll_bar().max_value)
-
-# ==========================================
-# TOOLTIP PREVIEW SYSTEM
-# ==========================================
-
-# ==========================================
-# FIXED BOTTOM PREVIEW SYSTEM
-# ==========================================
+		# Mapa idzie od lewej do prawej – scrollujemy do początku (lewej strony)
+		scroll.scroll_horizontal = 0
 
 # ==========================================
 # FIXED BOTTOM PREVIEW SYSTEM
@@ -61,51 +58,51 @@ func _create_preview_ui():
 	preview_panel = Control.new()
 	preview_panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
 	preview_panel.offset_top = -350
-	preview_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE # Ignoruj myszkę
+	preview_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	preview_layer.add_child(preview_panel)
 	
 	var main_hbox = HBoxContainer.new()
 	main_hbox.set_anchors_preset(Control.PRESET_FULL_RECT)
 	main_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	main_hbox.add_theme_constant_override("separation", 500)
-	main_hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE # Ignoruj myszkę
+	main_hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	preview_panel.add_child(main_hbox)
 	
 	var enemies_vbox = VBoxContainer.new()
 	enemies_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	enemies_vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE # Ignoruj myszkę
+	enemies_vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	main_hbox.add_child(enemies_vbox)
 	
 	var enemies_label = Label.new()
 	enemies_label.text = "ENEMIES"
 	enemies_label.add_theme_font_size_override("font_size", 24)
 	enemies_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	enemies_label.mouse_filter = Control.MOUSE_FILTER_IGNORE # Ignoruj myszkę
+	enemies_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	enemies_vbox.add_child(enemies_label)
 	
 	enemies_icon_container = HBoxContainer.new()
 	enemies_icon_container.alignment = BoxContainer.ALIGNMENT_CENTER 
 	enemies_icon_container.add_theme_constant_override("separation", 15) 
 	enemies_icon_container.custom_minimum_size = Vector2(0, 250)
-	enemies_icon_container.mouse_filter = Control.MOUSE_FILTER_IGNORE # Ignoruj myszkę
+	enemies_icon_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	enemies_vbox.add_child(enemies_icon_container)
 	
 	var rewards_vbox = VBoxContainer.new()
 	rewards_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	rewards_vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE # Ignoruj myszkę
+	rewards_vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	main_hbox.add_child(rewards_vbox)
 	
 	var rewards_label = Label.new()
 	rewards_label.text = "REWARDS"
 	rewards_label.add_theme_font_size_override("font_size", 24)
 	rewards_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	rewards_label.mouse_filter = Control.MOUSE_FILTER_IGNORE # Ignoruj myszkę
+	rewards_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	rewards_vbox.add_child(rewards_label)
 	
 	rewards_icon_container = HBoxContainer.new()
 	rewards_icon_container.alignment = BoxContainer.ALIGNMENT_CENTER
 	rewards_icon_container.custom_minimum_size = Vector2(0, 250)
-	rewards_icon_container.mouse_filter = Control.MOUSE_FILTER_IGNORE # Ignoruj myszkę
+	rewards_icon_container.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	rewards_vbox.add_child(rewards_icon_container)
 	
 	preview_panel.visible = false
@@ -126,7 +123,7 @@ func _on_node_hovered(grid_pos: Vector2):
 			else:
 				push_warning("Missing icon for enemy ID: ", enemy_id)
 				
-			icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE # Ignoruj myszkę
+			icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			icon_rect.custom_minimum_size = Vector2(300, 300)
 			icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -141,12 +138,11 @@ func _on_node_hovered(grid_pos: Vector2):
 		if map_rewards.has(grid_pos):
 			var rewards_list = map_rewards[grid_pos]
 			
-			# !!! PODMIEŃ NA SWOJĄ ŚCIEŻKĘ !!!
 			const SCENA_KARTY = preload("res://Object/Card.tscn")
 			
 			for card_id in rewards_list:
 				var card_wrapper = Control.new()
-				card_wrapper.mouse_filter = Control.MOUSE_FILTER_IGNORE # Ignoruj myszkę
+				card_wrapper.mouse_filter = Control.MOUSE_FILTER_IGNORE
 				card_wrapper.custom_minimum_size = Vector2(200, 300) 
 				
 				var card_inst = SCENA_KARTY.instantiate()
@@ -158,7 +154,6 @@ func _on_node_hovered(grid_pos: Vector2):
 				card_inst.scale = Vector2(0.5, 0.5) 
 				card_inst.set_start_position(Vector2(80, 120))
 				
-				# WYŁĄCZAMY FIZYKĘ KARTY (aby Area2D wewnątrz karty nie blokowało myszki na węźle mapy!)
 				_wylacz_kolizje_dla_myszki(card_inst)
 				
 				rewards_icon_container.add_child(card_wrapper)
@@ -172,13 +167,20 @@ func assign_room_data():
 	map_enemies.clear()
 	map_rewards.clear()
 	for grid_pos in map_nodes.keys():
-		# Losowanie Wrogów
-		if game_manager and game_manager.has_method("get_random_enemy_encounter"):
-			map_enemies[grid_pos] = game_manager.get_random_enemy_encounter()
+		var room_type = map_nodes[grid_pos]
+		
+		# Typ 4 (sklep) i typ 5 (event) – brak przeciwników
+		if room_type == 4 or room_type == 3:
+			# Nie przypisujemy wrogów – map_enemies nie będzie miał tego klucza
+			pass
 		else:
-			map_enemies[grid_pos] = [0] 
+			# Losowanie wrogów z puli właściwej dla danego typu pokoju
+			if game_manager and game_manager.has_method("get_random_enemy_encounter"):
+				map_enemies[grid_pos] = game_manager.get_random_enemy_encounter(room_type)
+			else:
+				map_enemies[grid_pos] = [0]
 			
-		# Losowanie Nagród (Kart)
+		# Losowanie nagród (kart) – dla wszystkich typów
 		if game_manager and game_manager.has_method("get_random_card_rewards"):
 			map_rewards[grid_pos] = game_manager.get_random_card_rewards()
 		else:
@@ -285,9 +287,12 @@ func generate_map():
 # 2. VISUALS AND DRAWING
 # ==========================================
 
+# Mapa generuje się od LEWEJ do PRAWEJ:
+# - grid_pos.x (poziom) → oś pozioma (X ekranu)
+# - grid_pos.y (pozycja w poziomie) → oś pionowa (Y ekranu)
 func grid_to_pixel(grid_pos: Vector2) -> Vector2:
-	var x_pixel = 200 + (grid_pos.y * 100)
-	var y_pixel = 700 - ((grid_pos.x - 1) * 100)
+	var x_pixel = 150 + ((grid_pos.x - 1) * 120)  # poziomy rosną w prawo
+	var y_pixel = 100 + (grid_pos.y * 100)          # pozycje rosną w dół
 	return Vector2(x_pixel, y_pixel)
 
 func draw_map_visuals():
@@ -296,7 +301,7 @@ func draw_map_visuals():
 		line.add_point(grid_to_pixel(edge["from"]))
 		line.add_point(grid_to_pixel(edge["to"]))
 		line.width = 4
-		line.default_color = Color.DARK_GRAY
+		line.default_color = Color(0.3, 0.3, 0.3, 0.0)  # ukryte – odświeżane przez update_path_visuals
 		line.set_meta("from", edge["from"])
 		line.set_meta("to", edge["to"])
 		add_child(line)
@@ -306,7 +311,31 @@ func draw_map_visuals():
 		var btn = Button.new()
 		btn.position = grid_to_pixel(grid_pos) - Vector2(25, 25) 
 		btn.custom_minimum_size = Vector2(50, 50)
-		btn.text = str(room_type)
+		
+		btn.text = ""
+		btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		
+		# Usuwamy ramkę/tło przycisku przez pusty StyleBox
+		var style_empty = StyleBoxEmpty.new()
+		btn.add_theme_stylebox_override("normal", style_empty)
+		btn.add_theme_stylebox_override("hover", style_empty)
+		btn.add_theme_stylebox_override("pressed", style_empty)
+		btn.add_theme_stylebox_override("disabled", style_empty)
+		btn.add_theme_stylebox_override("focus", style_empty)
+		
+		# Przypisujemy sprite dla danego typu pokoju przez TextureRect (kontrola rozmiaru)
+		var sprite_index = room_type - 1  # typ 1→index 0, typ 2→index 1, itd.
+		if sprite_index >= 0 and sprite_index < node_type_sprites.size() and node_type_sprites[sprite_index] != null:
+			var tex_rect = TextureRect.new()
+			tex_rect.texture = node_type_sprites[sprite_index]
+			tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			tex_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+			tex_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			btn.add_child(tex_rect)
+		else:
+			# Fallback: jeśli brak sprita, pokaż numer
+			btn.text = str(room_type)
 		
 		var color = Color.WHITE
 		match room_type:
@@ -317,7 +346,6 @@ func draw_map_visuals():
 			5: color = Color("FDFD96") 
 		btn.modulate = color
 		
-		# Hover signals
 		btn.mouse_entered.connect(_on_node_hovered.bind(grid_pos))
 		btn.mouse_exited.connect(_on_node_unhovered)
 		
@@ -337,26 +365,26 @@ func _on_node_clicked(grid_pos: Vector2, room_type: int):
 	if has_dragged_significantly: return
 		
 	if is_move_valid(grid_pos):
+		if current_node != Vector2.ZERO and not visited_nodes.has(current_node):
+			visited_nodes.append(current_node)
 		current_node = grid_pos
 		update_path_visuals()
 		
 		var room_enemies = []
 		if map_enemies.has(grid_pos): room_enemies = map_enemies[grid_pos]
 			
-		# POBIERAMY NAGRODY:
 		var room_rewards = []
 		if map_rewards.has(grid_pos): room_rewards = map_rewards[grid_pos]
 			
-		# PRZEKAZUJEMY NAGRODY:
 		trigger_room_action(room_type, room_enemies, room_rewards)
 
-# Dodaj trzeci argument room_rewards:
 func trigger_room_action(room_type: int, room_enemies: Array, room_rewards: Array):
 	if game_manager and combat_node and map_node:
+		# Zamieniona logika: typ 3 działa jak dawny typ 5, typ 5 jak dawny typ 3
+		var effective_type = room_type
 		map_node.hide()   
 		combat_node.show()  
-		# TUTA JEST KLUCZ: Musisz dodać ', room_rewards' na samym końcu!
-		game_manager.start_combat(room_enemies, room_rewards)
+		game_manager.start_combat(room_enemies, room_rewards, effective_type)
 
 func is_move_valid(target_pos: Vector2) -> bool:
 	if current_node == Vector2.ZERO:
@@ -367,17 +395,37 @@ func is_move_valid(target_pos: Vector2) -> bool:
 			return true
 	return false
 
+var visited_nodes: Array = []  # lista węzłów które gracz już odwiedził
+
 func update_path_visuals():
+	# Aktualizuj linie (drogi)
+	for child in get_children():
+		if child is Line2D:
+			var from_pos = child.get_meta("from")
+			var to_pos = child.get_meta("to")
+			# Droga przebyta: from był odwiedzony i to jest current lub też odwiedzony
+			if visited_nodes.has(from_pos) and (visited_nodes.has(to_pos) or to_pos == current_node):
+				child.default_color = Color.YELLOW
+				child.width = 5
+			# Droga dostępna (następny krok z current_node)
+			elif from_pos == current_node:
+				child.default_color = Color.WHITE
+				child.width = 4
+			else:
+				child.default_color = Color(0.4, 0.4, 0.4, 0.5)
+				child.width = 3
+
+	# Aktualizuj przyciski – bez szarości, wszystkie w pełnej alpha
 	for child in get_children():
 		if child is Button:
 			var node_pos = child.get_meta("grid_pos")
-			if is_move_valid(node_pos) or node_pos == current_node:
-				child.modulate.a = 1.0 
-				child.disabled = false
+			child.modulate.a = 1.0
+			if node_pos == current_node:
+				child.disabled = true  # już tu jesteśmy
+			elif is_move_valid(node_pos):
+				child.disabled = false  # można kliknąć
 			else:
-				child.modulate.a = 0.3 
-				if node_pos.x <= current_node.x:
-					child.disabled = true
+				child.disabled = node_pos.x <= current_node.x  # zablokuj cofanie
 
 
 
@@ -399,11 +447,12 @@ func _gui_input(event):
 			
 		var scroll = get_parent()
 		if scroll is ScrollContainer:
+			# Mapa pozioma – scrollujemy poziomo
+			scroll.scroll_horizontal += int(delta.x)
 			scroll.scroll_vertical += int(delta.y)
 		last_mouse_pos = event.global_position
 
 
-# Pętla wyłączająca fizyczne klikanie nagród
 func _wylacz_kolizje_dla_myszki(wezel: Node):
 	if wezel is CollisionObject2D:
 		wezel.input_pickable = false

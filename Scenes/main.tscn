@@ -1,4 +1,4 @@
-[gd_scene load_steps=31 format=3 uid="uid://cj07e7tcxt8aw"]
+[gd_scene load_steps=36 format=3 uid="uid://cj07e7tcxt8aw"]
 
 [ext_resource type="Texture2D" uid="uid://dh5pmnobyuurf" path="res://Art/Background/BackgroundUp1.png" id="2_344ge"]
 [ext_resource type="Script" uid="uid://deppbi7l0j7k7" path="res://Scripts/Deck.gd" id="3_344ge"]
@@ -28,7 +28,12 @@
 [ext_resource type="Texture2D" uid="uid://bec7hcxnd1dud" path="res://Art/Enemy/Enemy8.png" id="24_e08e2"]
 [ext_resource type="Texture2D" uid="uid://ctpmllugs5lew" path="res://Art/Enemy/Enemy9.png" id="25_neg2b"]
 [ext_resource type="Texture2D" uid="uid://k2tjpuhr1qta" path="res://Art/Enemy/Enemy10.png" id="26_r33sp"]
+[ext_resource type="Texture2D" uid="uid://cndsiddh4tn2v" path="res://Art/Icon/Przeciwnik.png" id="27_neg2b"]
+[ext_resource type="Texture2D" uid="uid://hegdb4qudbbe" path="res://Art/Icon/MiniBoss.png" id="28_r33sp"]
 [ext_resource type="Script" uid="uid://dgn47fbhmhne4" path="res://Scripts/PassiveManager.gd" id="29_6vcvc"]
+[ext_resource type="Texture2D" uid="uid://c6b2vvyiwbdf1" path="res://Art/Icon/Event2.png" id="29_hdf80"]
+[ext_resource type="Texture2D" uid="uid://d1tivh8rm287e" path="res://Art/Icon/Sklep2.png" id="30_jwpg7"]
+[ext_resource type="Texture2D" uid="uid://cg0c2vp1wkllh" path="res://Art/Icon/Boss.png" id="31_k2e45"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hptm8"]
 size = Vector2(191, 269)
@@ -158,9 +163,11 @@ script = ExtResource("8_344ge")
 [node name="MAPA" type="Node2D" parent="."]
 
 [node name="ScrollContainer" type="ScrollContainer" parent="MAPA"]
-offset_left = 409.0
-offset_right = 2320.0
-offset_bottom = 705.0
+offset_left = 326.00003
+offset_top = -49.999996
+offset_right = 2237.0
+offset_bottom = 655.0
+scale = Vector2(1.0800021, 1.0327156)
 
 [node name="MapArea" type="Control" parent="MAPA/ScrollContainer" node_paths=PackedStringArray("game_manager", "combat_node", "map_node")]
 custom_minimum_size = Vector2(1000, 700)
@@ -170,13 +177,13 @@ game_manager = NodePath("../../../GameManager")
 combat_node = NodePath("../../../WALKA")
 map_node = NodePath("../..")
 enemy_icons = Array[Texture2D]([ExtResource("17_hibaj"), ExtResource("18_pdsj5"), ExtResource("19_ueoa1"), ExtResource("20_6vcvc"), ExtResource("21_7k868"), ExtResource("22_hpc6h"), ExtResource("23_kltya"), ExtResource("24_e08e2"), ExtResource("25_neg2b"), ExtResource("26_r33sp")])
+node_type_sprites = Array[Texture2D]([ExtResource("27_neg2b"), ExtResource("28_r33sp"), ExtResource("29_hdf80"), ExtResource("30_jwpg7"), ExtResource("31_k2e45")])
 
 [node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("reward_panel", "reward_container", "combat_node", "map_node", "deck", "hand", "discard", "end_turn_button", "mana_manager", "player", "card_manager", "passive_manager")]
 script = ExtResource("9_hptm8")
 reward_panel = NodePath("../RewardPanel")
 reward_container = NodePath("../RewardPanel/RewardContainer")
 card_scene_for_rewards = ExtResource("4_d1ilt")
-use_random_encounters = null
 combat_node = NodePath("../WALKA")
 map_node = NodePath("../MAPA")
 deck = NodePath("../WALKA/Deck")
@@ -188,10 +195,6 @@ player = NodePath("../WALKA/Player")
 card_manager = NodePath("../CardManager")
 passive_manager = NodePath("passibeManager")
 enemy_scene = ExtResource("12_6iyac")
-spawn_start_position = null
-spawn_spacing = null
-custom_enemy_count = null
-default_enemy_id = null
 
 [node name="passibeManager" type="Node" parent="GameManager"]
 script = ExtResource("29_6vcvc")

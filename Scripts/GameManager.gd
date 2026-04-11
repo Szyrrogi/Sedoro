@@ -24,7 +24,7 @@ var pending_rewards: Array = []
 
 @export var enemies: Array[Node] 
 @export var enemy_scene: PackedScene 
-@export var spawn_start_position: Vector2 = Vector2(1300, 500) 
+@export var spawn_start_position: Vector2 = Vector2(1300, 600) 
 @export var spawn_spacing: float = 300.0 
 
 @export var custom_enemy_count: int = 0
@@ -35,7 +35,7 @@ var current_state = State.PLAYER_START
 
 const HAND_LIMIT = 10       # Maksymalna liczba kart w ręce
 const CARDS_PER_TURN = 7    # Kart dobieranych na początku tury
-const MANA_MAX = 6
+const MANA_MAX = 20
 
 var mana = 0  # Tura zaczyna się z 0 many
 
@@ -43,12 +43,11 @@ func _ready():
 	if end_turn_button:
 		end_turn_button.pressed.connect(_on_end_turn_button_pressed)
 
-# POPRAWIONA SYGNATURA: Musi przyjmować rewards!
-func start_combat(horde_data: Array = [], rewards: Array = []):
-	print("\n--- INICJACJA WALKI ---")
+func start_combat(horde_data: Array = [], rewards: Array = [], room_type: int = 1):
+	print("\n--- INICJACJA WALKI --- Typ pokoju: ", room_type)
 	print("Otrzymane nagrody z mapy: ", rewards)
 	
-	pending_rewards = rewards # Teraz to zadziała, bo rewards jest w nawiasie powyżej
+	pending_rewards = rewards
 	
 	# === 1. CZYSZCZENIE KART ===
 	var leftover_cards = hand.get_all_cards().duplicate()
@@ -160,54 +159,6 @@ func show_reward_screen():
 		btn.flat = true
 		btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		btn.z_index = 101
-		btn.pressed.connect(func(): _on_reward_card_chosen(card_id))
-		wrapper.add_child(btn)
-		
-		reward_container.add_child(wrapper)
-	if not reward_panel or not reward_container or not card_scene_for_rewards:
-		push_error("BŁĄD: Brak przypisanych węzłów UI w inspektorze GameManager!")
-		return_to_map()
-		return
-		
-	# Wymuszamy układ na środku
-	if reward_container is BoxContainer:
-		reward_container.alignment = BoxContainer.ALIGNMENT_CENTER
-		
-	# Czyścimy stare śmieci z panelu
-	for child in reward_container.get_children():
-		child.queue_free()
-		
-	reward_panel.show()
-	
-	# Tworzymy karty nagród
-	for card_id in pending_rewards:
-		var wrapper = Control.new()
-		wrapper.custom_minimum_size = Vector2(250, 350) 
-		
-		# 1. NAJPIERW KARTA Z TYŁU
-		var card_inst = card_scene_for_rewards.instantiate()
-		wrapper.add_child(card_inst)
-		
-		card_inst.setup_card(card_id)
-		card_inst.z_index = 100 
-		
-		if card_inst.has_method("set_start_position"):
-			card_inst.set_start_position(Vector2(125, 175))
-		else:
-			card_inst.position = Vector2(125, 175)
-			
-		card_inst.scale = Vector2(1.0, 1.0)
-		card_inst.scale_normal = Vector2(1.0, 1.0)
-		card_inst.scale_hover = Vector2(1.1, 1.1)
-		
-		_wylacz_kolizje_dla_myszki(card_inst)
-		
-		# 2. PRZYCISK CAŁKOWICIE Z PRZODU (dodany jako ostatni, więc jest na samej górze!)
-		var btn = Button.new()
-		btn.set_anchors_preset(Control.PRESET_FULL_RECT)
-		btn.flat = true
-		btn.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		btn.z_index = 101 # <--- WAŻNE: Przycisk musi mieć wyższy Z-index niż karta (100)!
 		btn.pressed.connect(func(): _on_reward_card_chosen(card_id))
 		wrapper.add_child(btn)
 		
@@ -395,16 +346,12 @@ func kill_all_enemies():
 		if is_instance_valid(enemy) and enemy.has_method("die"):
 			enemy.die()
 
-func get_random_enemy_encounter() -> Array:
-	#var possible_encounters = [
-		#[0, 0, 0], [1, 1, 1], [2, 2, 2], [3, 3, 3], [4, 4, 4],
-		#[5, 5, 5], [6, 6, 6], [7, 7, 7], [8, 8, 8], [9, 9, 9],
-	#]
-	var possible_encounters = EnemyDatabase.HORD.values()
-	
-	var chosen = possible_encounters.pick_random()
-	chosen.shuffle()
-	return chosen
+func get_random_enemy_encounter(room_type: int) -> Array:
+	match room_type:
+		1: return EnemyDatabase.HORD_TYPE1[randi() % EnemyDatabase.HORD_TYPE1.size()]
+		2: return EnemyDatabase.HORD_TYPE2[randi() % EnemyDatabase.HORD_TYPE2.size()]
+		5: return EnemyDatabase.HORD_TYPE3[randi() % EnemyDatabase.HORD_TYPE3.size()]
+	return [0]
 	
 	
 func get_random_card_rewards() -> Array:
