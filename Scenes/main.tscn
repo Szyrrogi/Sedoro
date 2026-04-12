@@ -112,13 +112,6 @@ offset_right = 187.0
 offset_bottom = 117.0
 text = "Next Turn "
 
-[node name="Tasuj" type="Button" parent="WALKA/CanvasLayer"]
-offset_left = 136.0
-offset_top = 716.0
-offset_right = 247.0
-offset_bottom = 747.0
-text = "Tasuj"
-
 [node name="Deck" type="Node2D" parent="WALKA" node_paths=PackedStringArray("discard_ref")]
 position = Vector2(1747.99, 880)
 script = ExtResource("3_344ge")
@@ -169,7 +162,7 @@ offset_right = 2237.0
 offset_bottom = 655.0
 scale = Vector2(1.0800021, 1.0327156)
 
-[node name="MapArea" type="Control" parent="MAPA/ScrollContainer" node_paths=PackedStringArray("game_manager", "combat_node", "map_node")]
+[node name="MapArea" type="Control" parent="MAPA/ScrollContainer" node_paths=PackedStringArray("game_manager", "combat_node", "map_node", "hud_hp_label", "hud_gold_label", "preview_gold_label")]
 custom_minimum_size = Vector2(1000, 700)
 layout_mode = 2
 script = ExtResource("16_b3802")
@@ -178,6 +171,34 @@ combat_node = NodePath("../../../WALKA")
 map_node = NodePath("../..")
 enemy_icons = Array[Texture2D]([ExtResource("17_hibaj"), ExtResource("18_pdsj5"), ExtResource("19_ueoa1"), ExtResource("20_6vcvc"), ExtResource("21_7k868"), ExtResource("22_hpc6h"), ExtResource("23_kltya"), ExtResource("24_e08e2"), ExtResource("25_neg2b"), ExtResource("26_r33sp")])
 node_type_sprites = Array[Texture2D]([ExtResource("27_neg2b"), ExtResource("28_r33sp"), ExtResource("29_hdf80"), ExtResource("30_jwpg7"), ExtResource("31_k2e45")])
+hud_hp_label = NodePath("Label")
+hud_gold_label = NodePath("Label2")
+preview_gold_label = NodePath("Label3")
+
+[node name="Label" type="Label" parent="MAPA/ScrollContainer/MapArea"]
+layout_mode = 0
+offset_left = 405.55475
+offset_top = 56.162605
+offset_right = 460.55475
+offset_bottom = 79.16261
+text = "222222"
+
+[node name="Label2" type="Label" parent="MAPA/ScrollContainer/MapArea"]
+layout_mode = 0
+offset_left = 532.4064
+offset_top = 57.130924
+offset_right = 706.4801
+offset_bottom = 128.78667
+text = "222222"
+horizontal_alignment = 1
+
+[node name="Label3" type="Label" parent="MAPA/ScrollContainer/MapArea"]
+layout_mode = 0
+offset_left = 53.703568
+offset_top = 605.2005
+offset_right = 108.70357
+offset_bottom = 628.2005
+text = "222222"
 
 [node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("reward_panel", "reward_container", "combat_node", "map_node", "deck", "hand", "discard", "end_turn_button", "mana_manager", "player", "card_manager", "passive_manager")]
 script = ExtResource("9_hptm8")

@@ -1,10 +1,14 @@
 extends Node
 
 
-@export var reward_panel: Control        # Przypisz w Inspektorze nowy panel UI!
-@export var reward_container: Container  # Przypisz w Inspektorze HBoxContainer!
-@export var card_scene_for_rewards: PackedScene # Przypisz tu swoją scenę res://Object/Card.tscn
+@export var reward_panel: Control
+@export var reward_container: Container
+@export var card_scene_for_rewards: PackedScene
 var pending_rewards: Array = []
+
+# NOWE: złoto gracza
+var gold: int = 0
+var pending_gold: int = 0   # złoto za bieżącą walkę (ustawiane przez MapGenerator)
 
 
 @export var use_random_encounters: bool = true
@@ -33,11 +37,11 @@ var pending_rewards: Array = []
 enum State { PLAYER_START, PLAYER_ACTION, ENEMY_TURN, BATTLE_ENDED }
 var current_state = State.PLAYER_START
 
-const HAND_LIMIT = 10       # Maksymalna liczba kart w ręce
-const CARDS_PER_TURN = 7    # Kart dobieranych na początku tury
+const HAND_LIMIT = 10
+const CARDS_PER_TURN = 7
 const MANA_MAX = 20
 
-var mana = 0  # Tura zaczyna się z 0 many
+var mana = 0
 
 func _ready():
 	if end_turn_button:
@@ -82,6 +86,12 @@ func win_battle():
 	print("Walka wygrana! Sprawdzam nagrody...")
 	current_state = State.BATTLE_ENDED 
 	
+	# NOWE: Dodaj złoto za pokonanych wrogów
+	if pending_gold > 0:
+		gold += pending_gold
+		print("Gracz otrzymuje ", pending_gold, " złota! Łącznie: ", gold)
+		pending_gold = 0
+	
 	if pending_rewards.size() > 0:
 		print("Znaleziono nagrody: ", pending_rewards, ". Pokazuję ekran.")
 		show_reward_screen()
@@ -95,47 +105,33 @@ func show_reward_screen():
 		return_to_map()
 		return
 		
-	# Wymuszamy układ na środku
 	if reward_container is BoxContainer:
 		reward_container.alignment = BoxContainer.ALIGNMENT_CENTER
 		
-	# Czyścimy stare śmieci z panelu (karty)
 	for child in reward_container.get_children():
 		child.queue_free()
 		
-	# Czyścimy stary tytuł, jeśli istnieje (żeby napisy się nie nakładały)
 	for child in reward_panel.get_children():
 		if child is Label and child.name == "RewardTitle":
 			child.queue_free()
 			
 	reward_panel.show()
 	
-# --- NOWE: TWORZENIE NAPISU ---
 	var title_label = Label.new()
 	title_label.name = "RewardTitle"
 	title_label.text = "CHOOSE ONE CARD:"
 	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	
-	# Ustawiamy napis na górze ekranu
 	title_label.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	title_label.offset_top = 100 
-	
-	# PRZESUNIĘCIE W PRAWO O 50 PIKSELI:
 	title_label.offset_left = 200
 	title_label.offset_right = 200
-	
-	# Powiększamy czcionkę
 	title_label.add_theme_font_size_override("font_size", 64) 
-	
-	# Dodajemy napis bezpośrednio do reward_panel
 	reward_panel.add_child(title_label)
-	# ------------------------------
-	# Tworzymy karty nagród
+
 	for card_id in pending_rewards:
 		var wrapper = Control.new()
 		wrapper.custom_minimum_size = Vector2(250, 350) 
 		
-		# 1. NAJPIERW KARTA Z TYŁU
 		var card_inst = card_scene_for_rewards.instantiate()
 		wrapper.add_child(card_inst)
 		
@@ -153,7 +149,6 @@ func show_reward_screen():
 		
 		_wylacz_kolizje_dla_myszki(card_inst)
 		
-		# 2. PRZYCISK CAŁKOWICIE Z PRZODU
 		var btn = Button.new()
 		btn.set_anchors_preset(Control.PRESET_FULL_RECT)
 		btn.flat = true
@@ -164,8 +159,6 @@ func show_reward_screen():
 		
 		reward_container.add_child(wrapper)
 
-# --- FUNKCJA POMOCNICZA ---
-# Wyłącza fizykę wewnątrz wizualnej karty, by przycisk UI działał płynnie
 func _wylacz_kolizje_dla_myszki(wezel: Node):
 	if wezel is CollisionObject2D:
 		wezel.input_pickable = false
@@ -173,7 +166,6 @@ func _wylacz_kolizje_dla_myszki(wezel: Node):
 		_wylacz_kolizje_dla_myszki(dziecko)
 
 func _on_reward_card_chosen(card_id: int):
-	# Gracz wybrał kartę - dodajemy do decku i wracamy na mapę
 	if deck and deck.has_method("add_card_to_deck"):
 		deck.add_card_to_deck(card_id)
 		
@@ -213,7 +205,7 @@ func spawn_horde(horde: Array):
 		add_child(enemy_inst)
 		
 		enemy_inst.player = player
-		enemy_inst.game_manager = self # <--- NOWA LINIJKA: GameManager przedstawia się wrogowi!
+		enemy_inst.game_manager = self
 		enemy_inst.modulate = Color(1, 1, 1)
 		enemy_inst.setup(enemy_id)
 		
@@ -231,7 +223,6 @@ func start_player_turn():
 	current_state = State.PLAYER_START
 	print("\n--- PLAYER TURN START ---")
 	
-	# Tura zawsze zaczyna się od 0 many
 	mana = 0
 	card_manager.redraws_used = 0
 	
@@ -246,11 +237,9 @@ func start_player_turn():
 	
 	player.modulate = Color(1.5, 1.5, 1.5)
 	
-	# Liczymy ile miejsca zostało w ręce (maks 10)
 	var current_hand_size = hand.get_child_count()
 	var cards_to_draw = CARDS_PER_TURN
 
-	# Uwzględnij draw_reduction (np. Twarda Głowa)
 	var draw_reduction = 0
 	if player and "draw_reduction_stacks" in player:
 		draw_reduction = player.draw_reduction_stacks
@@ -280,7 +269,6 @@ func end_player_turn():
 	card_manager.active = 0
 	card_manager.set_active()
 	
-	# Na końcu tury WSZYSTKIE karty z ręki idą do odrzuconych
 	var cards_in_hand = hand.get_all_cards().duplicate()
 	for card in cards_in_hand:
 		if card.is_selected:
@@ -333,15 +321,9 @@ func _input(event):
 		if event.keycode == KEY_6:
 			kill_all_enemies()
 
-# Funkcja pomocnicza do cheatu
 func kill_all_enemies():
 	print("CHEAT: Zabijanie wszystkich wrogów!")
-	
-	# Tworzymy kopię tablicy za pomocą .duplicate()
-	# Jest to bardzo ważne, ponieważ funkcja die() usuwa wrogów z oryginalnej tablicy.
-	# Gdybyśmy nie skopiowali tablicy, pętla by się "zgubiła" w trakcie usuwania.
 	var enemies_to_kill = enemies.duplicate()
-	
 	for enemy in enemies_to_kill:
 		if is_instance_valid(enemy) and enemy.has_method("die"):
 			enemy.die()
@@ -355,7 +337,6 @@ func get_random_enemy_encounter(room_type: int) -> Array:
 	
 	
 func get_random_card_rewards() -> Array:
-	# Przykładowa pula nagród (ID kart z CardDatabase)
 	var possible_rewards = [
 		[1, 2, 3], [4, 5], [1, 5, 6], [2, 7]
 	]
