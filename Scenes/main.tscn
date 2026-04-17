@@ -1,4 +1,4 @@
-[gd_scene load_steps=36 format=3 uid="uid://cj07e7tcxt8aw"]
+[gd_scene load_steps=39 format=3 uid="uid://cj07e7tcxt8aw"]
 
 [ext_resource type="Texture2D" uid="uid://dh5pmnobyuurf" path="res://Art/Background/BackgroundUp1.png" id="2_344ge"]
 [ext_resource type="Script" uid="uid://deppbi7l0j7k7" path="res://Scripts/Deck.gd" id="3_344ge"]
@@ -9,9 +9,12 @@
 [ext_resource type="Script" uid="uid://6cb8fvhsqqxy" path="res://Scripts/Discard.gd" id="5_hptm8"]
 [ext_resource type="Script" uid="uid://ddv4xrav0k0nn" path="res://Scripts/CardManager.gd" id="6_6iyac"]
 [ext_resource type="Script" uid="uid://bis87dtjlud6o" path="res://Scripts/Hand.gd" id="8_344ge"]
+[ext_resource type="Script" uid="uid://dnqlo32ixyvsh" path="res://Scripts/DeckViewer.gd" id="8_jwpg7"]
 [ext_resource type="Script" uid="uid://bxa5ha1a8ilpr" path="res://Scripts/GameManager.gd" id="9_hptm8"]
 [ext_resource type="Texture2D" uid="uid://ct720m5onx1yg" path="res://Art/Background/przykladowa.png" id="9_ynf5e"]
 [ext_resource type="Texture2D" uid="uid://27mhuwaghgc0" path="res://Art/Misc/Strzauka6.png" id="10_fdnlq"]
+[ext_resource type="Script" uid="uid://dg7xfyku2662q" path="res://Scripts/ShopScreen.gd" id="10_k2e45"]
+[ext_resource type="Texture2D" uid="uid://dbqlgbbmlq1d3" path="res://Art/Enemy/enemy_test.png" id="11_536cc"]
 [ext_resource type="PackedScene" uid="uid://ckx1a5k12nwo2" path="res://Scenes/Enemy.tscn" id="12_6iyac"]
 [ext_resource type="Script" uid="uid://cr4jpy03ksr4o" path="res://Scripts/ManaManager.gd" id="14_wsu2k"]
 [ext_resource type="Texture2D" uid="uid://ddidnxwdxqqij" path="res://Art/Icon/Mana/Mana2.png" id="15_k12tt"]
@@ -81,6 +84,131 @@ position = Vector2(894.99994, 723.00006)
 scale = Vector2(0.59, 0.93564355)
 texture = ExtResource("17_h1bgf")
 
+[node name="Pogląd" type="Control" parent="." node_paths=PackedStringArray("card_grid", "close_button", "map_node", "combat_node")]
+visible = false
+layout_mode = 3
+anchors_preset = 0
+offset_right = 1911.0
+offset_bottom = 739.0
+script = ExtResource("8_jwpg7")
+card_scene = ExtResource("4_d1ilt")
+card_grid = NodePath("HFlowContainer")
+close_button = NodePath("Button")
+map_node = NodePath("../MAPA")
+combat_node = NodePath("../WALKA")
+
+[node name="ColorRect" type="ColorRect" parent="Pogląd"]
+layout_mode = 0
+offset_right = 1924.0
+offset_bottom = 734.0
+color = Color(0.5211406, 0.5211406, 0.5211405, 1)
+
+[node name="Label" type="Label" parent="Pogląd"]
+layout_mode = 0
+offset_left = 979.0
+offset_top = 28.0
+offset_right = 1019.0
+offset_bottom = 51.0
+text = "talia"
+
+[node name="Button" type="Button" parent="Pogląd"]
+layout_mode = 0
+offset_left = 100.0
+offset_top = 761.0
+offset_right = 253.0
+offset_bottom = 885.0
+text = "X"
+
+[node name="HFlowContainer" type="HFlowContainer" parent="Pogląd"]
+layout_mode = 0
+offset_left = 2.0
+offset_top = 4.0
+offset_right = 1931.0
+offset_bottom = 737.0
+
+[node name="SKLEP2" type="Control" parent="." node_paths=PackedStringArray("game_manager", "card_container", "heal_button", "heal_cost_label", "remove_button", "remove_cost_label", "leave_button", "deck_viewer")]
+visible = false
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("10_k2e45")
+game_manager = NodePath("../GameManager")
+card_scene = ExtResource("4_d1ilt")
+card_container = NodePath("środek/HBoxContainer")
+heal_button = NodePath("Left/HealButton")
+heal_cost_label = NodePath("Left/HealthLabelCost")
+remove_button = NodePath("prawda/RemoveButton")
+remove_cost_label = NodePath("prawda/removeLabelCost")
+leave_button = NodePath("Button")
+deck_viewer = NodePath("../Pogląd")
+
+[node name="Tło" type="Sprite2D" parent="SKLEP2"]
+position = Vector2(857.99994, 473)
+scale = Vector2(0.8407164, 0.7415513)
+texture = ExtResource("11_536cc")
+
+[node name="Label" type="Label" parent="SKLEP2"]
+layout_mode = 0
+offset_left = 870.0
+offset_top = 118.0
+offset_right = 934.0
+offset_bottom = 162.0
+text = "sklep"
+
+[node name="Left" type="VBoxContainer" parent="SKLEP2"]
+layout_mode = 0
+offset_left = 207.0
+offset_top = 759.0
+offset_right = 445.0
+offset_bottom = 992.0
+
+[node name="HealthLabel" type="Label" parent="SKLEP2/Left"]
+layout_mode = 2
+text = "Lecz się "
+
+[node name="HealthLabelCost" type="Label" parent="SKLEP2/Left"]
+layout_mode = 2
+text = "20"
+
+[node name="HealButton" type="Button" parent="SKLEP2/Left"]
+layout_mode = 2
+text = "Lecz"
+
+[node name="środek" type="VBoxContainer" parent="SKLEP2"]
+layout_mode = 0
+offset_left = 474.0
+offset_top = 758.0
+offset_right = 1316.0
+offset_bottom = 1007.0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="SKLEP2/środek"]
+layout_mode = 2
+
+[node name="prawda" type="VBoxContainer" parent="SKLEP2"]
+layout_mode = 0
+offset_left = 1300.0
+offset_top = 759.0
+offset_right = 1538.0
+offset_bottom = 1022.0
+
+[node name="RemoveLabel" type="Label" parent="SKLEP2/prawda"]
+layout_mode = 2
+text = "Usuń karte"
+
+[node name="removeLabelCost" type="Label" parent="SKLEP2/prawda"]
+layout_mode = 2
+text = "20"
+
+[node name="RemoveButton" type="Button" parent="SKLEP2/prawda"]
+layout_mode = 2
+text = "Usuń"
+
+[node name="Button" type="Button" parent="SKLEP2"]
+layout_mode = 0
+offset_right = 187.0
+offset_bottom = 120.0
+
 [node name="WALKA" type="Node2D" parent="."]
 visible = false
 
@@ -104,13 +232,6 @@ position = Vector2(563, 544)
 scale = Vector2(0.5, 0.5)
 
 [node name="CanvasLayer" type="CanvasLayer" parent="WALKA"]
-
-[node name="EndTurnButton" type="Button" parent="WALKA/CanvasLayer"]
-offset_left = 48.0
-offset_top = 57.0
-offset_right = 187.0
-offset_bottom = 117.0
-text = "Next Turn "
 
 [node name="Deck" type="Node2D" parent="WALKA" node_paths=PackedStringArray("discard_ref")]
 position = Vector2(1747.99, 880)
@@ -153,16 +274,23 @@ position = Vector2(899.29, 905)
 scale = Vector2(0.6, 0.6)
 script = ExtResource("8_344ge")
 
+[node name="EndTurnButton" type="Button" parent="WALKA"]
+offset_left = 80.0
+offset_top = 720.0
+offset_right = 219.0
+offset_bottom = 780.0
+text = "Exit"
+
 [node name="MAPA" type="Node2D" parent="."]
 
 [node name="ScrollContainer" type="ScrollContainer" parent="MAPA"]
-offset_left = 326.00003
-offset_top = -49.999996
-offset_right = 2237.0
-offset_bottom = 655.0
+offset_left = 177.0
+offset_top = -66.99999
+offset_right = 2088.0
+offset_bottom = 602.1097
 scale = Vector2(1.0800021, 1.0327156)
 
-[node name="MapArea" type="Control" parent="MAPA/ScrollContainer" node_paths=PackedStringArray("game_manager", "combat_node", "map_node", "hud_hp_label", "hud_gold_label", "preview_gold_label")]
+[node name="MapArea" type="Control" parent="MAPA/ScrollContainer" node_paths=PackedStringArray("game_manager", "combat_node", "map_node", "hud_hp_label", "hud_gold_label", "preview_gold_label", "deck_viewer", "view_deck_button")]
 custom_minimum_size = Vector2(1000, 700)
 layout_mode = 2
 script = ExtResource("16_b3802")
@@ -174,6 +302,8 @@ node_type_sprites = Array[Texture2D]([ExtResource("27_neg2b"), ExtResource("28_r
 hud_hp_label = NodePath("Label")
 hud_gold_label = NodePath("Label2")
 preview_gold_label = NodePath("Label3")
+deck_viewer = NodePath("../../../Pogląd")
+view_deck_button = NodePath("../../viewDeck")
 
 [node name="Label" type="Label" parent="MAPA/ScrollContainer/MapArea"]
 layout_mode = 0
@@ -200,6 +330,13 @@ offset_right = 108.70357
 offset_bottom = 628.2005
 text = "222222"
 
+[node name="viewDeck" type="Button" parent="MAPA"]
+offset_left = 57.0
+offset_top = 605.0
+offset_right = 138.0
+offset_bottom = 670.0
+text = "Decj"
+
 [node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("reward_panel", "reward_container", "combat_node", "map_node", "deck", "hand", "discard", "end_turn_button", "mana_manager", "player", "card_manager", "passive_manager")]
 script = ExtResource("9_hptm8")
 reward_panel = NodePath("../RewardPanel")
@@ -210,15 +347,16 @@ map_node = NodePath("../MAPA")
 deck = NodePath("../WALKA/Deck")
 hand = NodePath("../WALKA/Hand")
 discard = NodePath("../WALKA/Discard")
-end_turn_button = NodePath("../WALKA/CanvasLayer/EndTurnButton")
+end_turn_button = NodePath("../WALKA/EndTurnButton")
 mana_manager = NodePath("../WALKA/ManaManager")
 player = NodePath("../WALKA/Player")
 card_manager = NodePath("../CardManager")
 passive_manager = NodePath("passibeManager")
 enemy_scene = ExtResource("12_6iyac")
 
-[node name="passibeManager" type="Node" parent="GameManager"]
+[node name="passibeManager" type="Node" parent="GameManager" node_paths=PackedStringArray("game_manager")]
 script = ExtResource("29_6vcvc")
+game_manager = NodePath("..")
 
 [node name="RewardPanel" type="ColorRect" parent="."]
 visible = false

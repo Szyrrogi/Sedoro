@@ -23,6 +23,12 @@ extends Control
 @export var preview_gold_label: Label  # Label pokazujący złoto za walkę w podglądzie
 
 # ==========================================
+# USTAW W INSPEKTORZE – Podgląd talii
+# ==========================================
+@export var deck_viewer: Control        # DeckViewer node
+@export var view_deck_button: Button    # Przycisk "Pokaż talię"
+
+# ==========================================
 
 var map_enemies = {}
 var preview_panel: Control
@@ -51,6 +57,9 @@ func _ready():
 	generate_map()
 	assign_room_data()
 	draw_map_visuals()
+	
+	if view_deck_button:
+		view_deck_button.pressed.connect(_on_view_deck_pressed)
 	
 	await get_tree().process_frame
 	var scroll = get_parent()
@@ -409,9 +418,21 @@ func _on_node_clicked(grid_pos: Vector2, room_type: int):
 			
 		trigger_room_action(room_type, room_enemies, room_rewards)
 
+func _on_view_deck_pressed():
+	if not deck_viewer or not game_manager: return
+	var deck_data    = game_manager.deck.deck_data       if game_manager.deck    else []
+	var discard_data = game_manager.discard.discard_data if game_manager.discard else []
+	if deck_viewer.has_method("show_deck"):
+		deck_viewer.show_deck(deck_data, discard_data)
+
 func trigger_room_action(room_type: int, room_enemies: Array, room_rewards: Array):
-	if game_manager and combat_node and map_node:
-		map_node.hide()
+	if not game_manager or not combat_node or not map_node:
+		return
+	map_node.hide()
+	# Pole 4 = Sklep
+	if room_type == 4:
+		game_manager.open_shop()
+	else:
 		combat_node.show()
 		game_manager.start_combat(room_enemies, room_rewards, room_type)
 

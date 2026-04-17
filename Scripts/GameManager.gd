@@ -16,6 +16,7 @@ var pending_gold: int = 0   # złoto za bieżącą walkę (ustawiane przez MapGe
 # --- NODES TO ASSIGN IN INSPECTOR ---
 @export var combat_node: Node
 @export var map_node: Node
+@export var shop_node: Control   # Przypisz ShopScreen node w Inspektorze
 
 @export var deck: Node2D
 @export var hand: Node2D
@@ -81,6 +82,17 @@ func start_combat(horde_data: Array = [], rewards: Array = [], room_type: int = 
 	
 	await get_tree().create_timer(0.5).timeout
 	start_player_turn()
+
+func open_shop():
+	print("Otwieranie sklepu...")
+	if shop_node and shop_node.has_method("open_shop"):
+		combat_node.hide()
+		map_node.hide()
+		shop_node.show()
+		shop_node.open_shop()
+	else:
+		push_error("GameManager: brak przypisanego shop_node lub metody open_shop!")
+		return_to_map()
 
 func win_battle():
 	print("Walka wygrana! Sprawdzam nagrody...")
@@ -175,7 +187,8 @@ func _on_reward_card_chosen(card_id: int):
 func return_to_map():
 	if reward_panel:
 		reward_panel.hide()
-		
+	if shop_node:
+		shop_node.hide()
 	if combat_node and map_node:
 		combat_node.hide() 
 		map_node.show()
