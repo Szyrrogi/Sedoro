@@ -85,14 +85,16 @@ func start_combat(horde_data: Array = [], rewards: Array = [], room_type: int = 
 
 func open_shop():
 	print("Otwieranie sklepu...")
-	if shop_node and shop_node.has_method("open_shop"):
-		combat_node.hide()
-		map_node.hide()
-		shop_node.show()
-		shop_node.open_shop()
-	else:
-		push_error("GameManager: brak przypisanego shop_node lub metody open_shop!")
-		return_to_map()
+	if not shop_node:
+		push_error("GameManager: shop_node NIE JEST PRZYPISANY w Inspektorze!")
+		return
+	if not shop_node.has_method("open_shop"):
+		push_error("GameManager: shop_node nie ma metody open_shop – sprawdź czy ShopScreen.gd jest dołączony!")
+		return
+	combat_node.hide()
+	map_node.hide()
+	shop_node.show()
+	shop_node.open_shop()
 
 func win_battle():
 	print("Walka wygrana! Sprawdzam nagrody...")

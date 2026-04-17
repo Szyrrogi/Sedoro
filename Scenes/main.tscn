@@ -304,6 +304,7 @@ hud_gold_label = NodePath("Label2")
 preview_gold_label = NodePath("Label3")
 deck_viewer = NodePath("../../../Pogląd")
 view_deck_button = NodePath("../../viewDeck")
+shop_preview_texture = ExtResource("11_536cc")
 
 [node name="Label" type="Label" parent="MAPA/ScrollContainer/MapArea"]
 layout_mode = 0
@@ -337,13 +338,14 @@ offset_right = 138.0
 offset_bottom = 670.0
 text = "Decj"
 
-[node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("reward_panel", "reward_container", "combat_node", "map_node", "deck", "hand", "discard", "end_turn_button", "mana_manager", "player", "card_manager", "passive_manager")]
+[node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("reward_panel", "reward_container", "combat_node", "map_node", "shop_node", "deck", "hand", "discard", "end_turn_button", "mana_manager", "player", "card_manager", "passive_manager")]
 script = ExtResource("9_hptm8")
 reward_panel = NodePath("../RewardPanel")
 reward_container = NodePath("../RewardPanel/RewardContainer")
 card_scene_for_rewards = ExtResource("4_d1ilt")
 combat_node = NodePath("../WALKA")
 map_node = NodePath("../MAPA")
+shop_node = NodePath("../SKLEP2")
 deck = NodePath("../WALKA/Deck")
 hand = NodePath("../WALKA/Hand")
 discard = NodePath("../WALKA/Discard")

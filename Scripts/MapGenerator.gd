@@ -29,6 +29,11 @@ extends Control
 @export var view_deck_button: Button    # Przycisk "Pokaż talię"
 
 # ==========================================
+# USTAW W INSPEKTORZE – Podgląd sklepu
+# ==========================================
+@export var shop_preview_texture: Texture2D  # Sprite wyświetlany przy hover na sklepie
+
+# ==========================================
 
 var map_enemies = {}
 var preview_panel: Control
@@ -147,7 +152,42 @@ func _on_node_hovered(grid_pos: Vector2):
 	# Pokazuj podgląd tylko dla węzłów, na które można się przenieść
 	if not is_move_valid(grid_pos):
 		return
-		
+
+	var room_type = map_nodes.get(grid_pos, -1)
+
+	# --- Sklep (typ 4) – osobny podgląd ---
+	if room_type == 4:
+		for child in enemies_icon_container.get_children():
+			child.queue_free()
+		for child in rewards_icon_container.get_children():
+			child.queue_free()
+
+		# Ikona sklepu
+		var shop_icon = TextureRect.new()
+		shop_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		shop_icon.custom_minimum_size = Vector2(300, 300)
+		shop_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		shop_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		if shop_preview_texture:
+			shop_icon.texture = shop_preview_texture
+		enemies_icon_container.add_child(shop_icon)
+
+		# Opis po prawej
+		var desc = Label.new()
+		desc.text = "🏪 SKLEP\n\n• Kup kartę\n• Ulecz się (10 💰)\n• Usuń kartę z talii"
+		desc.add_theme_font_size_override("font_size", 26)
+		desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		desc.autowrap_mode = TextServer.AUTOWRAP_WORD
+		desc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		rewards_icon_container.add_child(desc)
+
+		if preview_gold_label:
+			preview_gold_label.text = ""
+			preview_gold_label.visible = false
+
+		preview_panel.visible = true
+		return
+
 	if not map_enemies.has(grid_pos):
 		return
 
