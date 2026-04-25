@@ -128,6 +128,68 @@ const CARDS = {
 
 	101: ["Kęs",    2, "Art0", "Zadaj 3 obrażenia", [], 0, [0,3],  0, 0, 0],
 	102: ["ArmorUp",2, "Art0", "3 Armora",           [], 1, [1,3],  0, 0, 0],
+		# ============================================================
+	# KARTY PRZECIWNIKÓW - WĘŻE (IDs 200+)
+	# ============================================================
+ 
+	# Karty podstawowe
+	200: ["Ukąszenie",        1, "Art0", "Zadaj 3 obrażenia",                      [], 0, [0,3],           0, 0, 0],
+	201: ["Obrona",           1, "Art0", "Zyskaj 4 pancerza",                      [], 1, [1,4],           0, 0, 0],
+	202: ["Łuskowata Zbroja", 1, "Art0", "Zyskaj 5 pancerza",                      [], 1, [1,5],           0, 0, 0],
+	203: ["Regeneracja Łusek",1, "Art0", "Lecz się o 4",                           [], 1, [3,4],           0, 0, 0],
+	204: ["Kolcowanie",       1, "Art0", "Zyskaj 3 cierni",                        [], 1, [5,3],           0, 0, 0],
+	205: ["Podwójny Kęs",     1, "Art0", "Zadaj 2 obrażenia",                      [], 0, [0,2],           0, 0, 0],
+	206: ["Jadowy Kęs",       1, "Art0", "Nałóż 3 trucizny na gracza",             [], 0, [16,3],          0, 0, 0],
+ 
+	# 207/208: WybuchającyWąż - ładuje się 2 tury, potem wybucha
+	# Logika licznika powinna być w enemy.gd (planned_charge_turns)
+	207: ["Ładowanie...",     1, "Art0", "Ładuje się. Nic nie robi.",              [], 1, [1,1],           0, 0, 0],
+	208: ["Eksplozja!",       1, "Art0", "Zadaj 12 obrażeń",                       [], 0, [0,12],          0, 0, 0],
+ 
+	# 209: MagicznyWąż - leczy sojuszników
+	209: ["Uzdrowienie",      1, "Art0", "Lecz się o 6",                           [], 1, [3,6],           0, 0, 0],
+ 
+	# 210: GrzybowyWąż - zarodniki trujące
+	210: ["Zarodniki",        1, "Art0", "Nałóż 2 trucizny na gracza",             [], 0, [16,2],          0, 0, 0],
+ 
+	# 211: PancernyWąż - obrona + sygnał "jedyny cel"
+	211: ["Nietykalność",     1, "Art0", "Zyskaj 6 pancerza",                      [], 1, [1,6],           0, 0, 0],
+ 
+	# 212: POTĘŻNYWąż - ładuje buffy i uderza
+	212: ["Naładowany Atak",  1, "Art0", "Zadaj 8 obrażeń i zyskaj 3 pancerza",   [], 0, [6,[0,8],[1,3]],  0, 0, 0],
+ 
+	# 213: Pasożyt - kradnie pancerz (tu: atak + osłabienie)
+	213: ["Pasożytowanie",    1, "Art0", "Zadaj 3 i nałóż 2 osłabienia",           [], 0, [6,[0,3],[15,2]], 0, 0, 0],
+ 
+	# 214: MrocznyWąż - klątwa
+	214: ["Klątwa Mroku",     1, "Art0", "Nałóż 2 osłabienia i 2 trucizny",        [], 0, [6,[15,2],[16,2]],0, 0, 0],
+ 
+	# 215: WypływaczWęży - wzmacnia się (przywołanie obsłużone osobno)
+	215: ["Wezwanie",         1, "Art0", "Zyskaj 4 pancerza i lecz się o 3",       [], 1, [6,[1,4],[3,3]],  0, 0, 0],
+ 
+	# 216: ZłotyWąż - zdalna trucizna (niewidzialny)
+	216: ["Zdalne Ukąszenie", 1, "Art0", "Nałóż 4 trucizny na gracza",             [], 0, [16,4],          0, 0, 0],
+ 
+	# 217: Pożeracz - pożarcie
+	217: ["Pożarcie",         1, "Art0", "Zadaj 10 obrażeń",                       [], 0, [0,10],          0, 0, 0],
+ 
+	# 218: WężowyKapłan - leczy i regeneruje
+	218: ["Błogosławieństwo", 1, "Art0", "Lecz się o 8 i zyskaj 3 regen",          [], 1, [6,[3,8],[4,3]],  0, 0, 0],
+ 
+	# 219: WążZabójca - atak z cierniami
+	219: ["Cień",             1, "Art0", "Zadaj 5 obrażeń i zyskaj 2 ciernie",     [], 0, [6,[0,5],[5,2]],  0, 0, 0],
+ 
+	# 220: Lamia - zauroczenie (osłabienie + ssanie życia)
+	220: ["Zauroczenie",      1, "Art0", "Nałóż 3 osłabienia i zadaj 4 obrażeń",  [], 0, [6,[15,3],[0,4]], 0, 0, 0],
+ 
+	# 221: Chimera - trójatak
+	221: ["Trójatak",         1, "Art0", "Zadaj 4 obrażeń, 2 trucizny i 2 ciernie",[], 0, [6,[0,4],[16,2]], 0, 0, 0],
+ 
+	# 222: StaryWąż - furia (silniejszy gdy mniej HP - logika w enemy.gd override damage)
+	222: ["Furia Starości",   1, "Art0", "Zadaj 5 obrażeń (rośnie przy mniej HP)", [], 0, [0,5],           0, 0, 0],
+ 
+	# 223: ZombieWąż - atak + trucizna (zmartwychwstanie obsłużone w enemy.gd)
+	223: ["Zmartwychwstanie", 1, "Art0", "Zadaj 4 obrażeń i nałóż 3 trucizny",    [], 0, [6,[0,4],[16,3]], 0, 0, 0],
 }
 
 # ============================================================

@@ -339,6 +339,7 @@ offset_bottom = 670.0
 text = "Decj"
 
 [node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("reward_panel", "reward_container", "combat_node", "map_node", "shop_node", "deck", "hand", "discard", "end_turn_button", "mana_manager", "player", "card_manager", "passive_manager")]
+position = Vector2(0, -274.845)
 script = ExtResource("9_hptm8")
 reward_panel = NodePath("../RewardPanel")
 reward_container = NodePath("../RewardPanel/RewardContainer")
