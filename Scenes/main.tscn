@@ -1,4 +1,4 @@
-[gd_scene load_steps=39 format=3 uid="uid://cj07e7tcxt8aw"]
+[gd_scene load_steps=33 format=3 uid="uid://cj07e7tcxt8aw"]
 
 [ext_resource type="Texture2D" uid="uid://dh5pmnobyuurf" path="res://Art/Background/BackgroundUp1.png" id="2_344ge"]
 [ext_resource type="Script" uid="uid://deppbi7l0j7k7" path="res://Scripts/Deck.gd" id="3_344ge"]
@@ -8,29 +8,23 @@
 [ext_resource type="Script" uid="uid://tp7p30agx0r7" path="res://Scripts/InputManager.gd" id="5_d1ilt"]
 [ext_resource type="Script" uid="uid://6cb8fvhsqqxy" path="res://Scripts/Discard.gd" id="5_hptm8"]
 [ext_resource type="Script" uid="uid://ddv4xrav0k0nn" path="res://Scripts/CardManager.gd" id="6_6iyac"]
+[ext_resource type="Texture2D" uid="uid://cklq4crpiq2yx" path="res://Art/Background/GornyWonsz.png" id="8_7k868"]
 [ext_resource type="Script" uid="uid://bis87dtjlud6o" path="res://Scripts/Hand.gd" id="8_344ge"]
 [ext_resource type="Script" uid="uid://dnqlo32ixyvsh" path="res://Scripts/DeckViewer.gd" id="8_jwpg7"]
+[ext_resource type="Texture2D" uid="uid://ddiest6bigt87" path="res://Art/Background/HP.png" id="9_hpc6h"]
 [ext_resource type="Script" uid="uid://bxa5ha1a8ilpr" path="res://Scripts/GameManager.gd" id="9_hptm8"]
 [ext_resource type="Texture2D" uid="uid://ct720m5onx1yg" path="res://Art/Background/przykladowa.png" id="9_ynf5e"]
 [ext_resource type="Texture2D" uid="uid://27mhuwaghgc0" path="res://Art/Misc/Strzauka6.png" id="10_fdnlq"]
 [ext_resource type="Script" uid="uid://dg7xfyku2662q" path="res://Scripts/ShopScreen.gd" id="10_k2e45"]
+[ext_resource type="Texture2D" uid="uid://dedbdf1p5753b" path="res://Art/Background/Ustawienia.png" id="10_kltya"]
 [ext_resource type="Texture2D" uid="uid://dbqlgbbmlq1d3" path="res://Art/Enemy/enemy_test.png" id="11_536cc"]
+[ext_resource type="Texture2D" uid="uid://bphqf50o6gks" path="res://Art/Background/uski.png" id="11_hpc6h"]
 [ext_resource type="PackedScene" uid="uid://ckx1a5k12nwo2" path="res://Scenes/Enemy.tscn" id="12_6iyac"]
 [ext_resource type="Script" uid="uid://cr4jpy03ksr4o" path="res://Scripts/ManaManager.gd" id="14_wsu2k"]
 [ext_resource type="Texture2D" uid="uid://ddidnxwdxqqij" path="res://Art/Icon/Mana/Mana2.png" id="15_k12tt"]
 [ext_resource type="Script" uid="uid://duu618euuy4dm" path="res://Scripts/MapGenerator.gd" id="16_b3802"]
 [ext_resource type="PackedScene" uid="uid://blplkuxn65mic" path="res://Scenes/Character.tscn" id="16_k12tt"]
 [ext_resource type="Texture2D" uid="uid://co2hcc6ymaiom" path="res://Art/Card/division1.png" id="17_h1bgf"]
-[ext_resource type="Texture2D" uid="uid://d1i1heg1qv1x6" path="res://Art/Enemy/Enemy1.png" id="17_hibaj"]
-[ext_resource type="Texture2D" uid="uid://dg1kkfi6xm3to" path="res://Art/Enemy/Enemy2.png" id="18_pdsj5"]
-[ext_resource type="Texture2D" uid="uid://c55177sb70o7b" path="res://Art/Enemy/Enemy3.png" id="19_ueoa1"]
-[ext_resource type="Texture2D" uid="uid://b7smj1qi3ipj6" path="res://Art/Enemy/Enemy4.png" id="20_6vcvc"]
-[ext_resource type="Texture2D" uid="uid://clewo2qhsinj8" path="res://Art/Enemy/Enemy5.png" id="21_7k868"]
-[ext_resource type="Texture2D" path="res://Art/Enemy/Enemy6.png" id="22_hpc6h"]
-[ext_resource type="Texture2D" uid="uid://w7j34bp00hiu" path="res://Art/Enemy/Enemy7.png" id="23_kltya"]
-[ext_resource type="Texture2D" uid="uid://bec7hcxnd1dud" path="res://Art/Enemy/Enemy8.png" id="24_e08e2"]
-[ext_resource type="Texture2D" uid="uid://ctpmllugs5lew" path="res://Art/Enemy/Enemy9.png" id="25_neg2b"]
-[ext_resource type="Texture2D" uid="uid://k2tjpuhr1qta" path="res://Art/Enemy/Enemy10.png" id="26_r33sp"]
 [ext_resource type="Texture2D" uid="uid://cndsiddh4tn2v" path="res://Art/Icon/Przeciwnik.png" id="27_neg2b"]
 [ext_resource type="Texture2D" uid="uid://hegdb4qudbbe" path="res://Art/Icon/MiniBoss.png" id="28_r33sp"]
 [ext_resource type="Script" uid="uid://dgn47fbhmhne4" path="res://Scripts/PassiveManager.gd" id="29_6vcvc"]
@@ -83,6 +77,37 @@ visible = false
 position = Vector2(894.99994, 723.00006)
 scale = Vector2(0.59, 0.93564355)
 texture = ExtResource("17_h1bgf")
+
+[node name="PasekGorny" type="Sprite2D" parent="Background"]
+position = Vector2(960, 104)
+texture = ExtResource("8_7k868")
+
+[node name="HP" type="Sprite2D" parent="Background/PasekGorny"]
+position = Vector2(280, -60)
+texture = ExtResource("9_hpc6h")
+
+[node name="HPText" type="Label" parent="Background/PasekGorny/HP"]
+offset_left = -30.0
+offset_top = -16.0
+offset_right = 25.0
+offset_bottom = 7.0000076
+text = "222222"
+
+[node name="opcje" type="Sprite2D" parent="Background/PasekGorny"]
+position = Vector2(-884, -43)
+texture = ExtResource("10_kltya")
+
+[node name="łuski" type="Sprite2D" parent="Background/PasekGorny"]
+position = Vector2(478, -73)
+texture = ExtResource("11_hpc6h")
+
+[node name="Label2" type="Label" parent="Background/PasekGorny/łuski"]
+offset_left = -76.0
+offset_top = -10.0
+offset_right = 98.07373
+offset_bottom = 61.655746
+text = "222222"
+horizontal_alignment = 1
 
 [node name="Pogląd" type="Control" parent="." node_paths=PackedStringArray("card_grid", "close_button", "map_node", "combat_node")]
 visible = false
@@ -284,11 +309,11 @@ text = "Exit"
 [node name="MAPA" type="Node2D" parent="."]
 
 [node name="ScrollContainer" type="ScrollContainer" parent="MAPA"]
-offset_left = 177.0
-offset_top = -66.99999
-offset_right = 2088.0
-offset_bottom = 602.1097
-scale = Vector2(1.0800021, 1.0327156)
+offset_left = 149.00002
+offset_top = -58.000008
+offset_right = 2060.0
+offset_bottom = 611.1097
+scale = Vector2(1.0622373, 1.1595463)
 
 [node name="MapArea" type="Control" parent="MAPA/ScrollContainer" node_paths=PackedStringArray("game_manager", "combat_node", "map_node", "hud_hp_label", "hud_gold_label", "preview_gold_label", "deck_viewer", "view_deck_button")]
 custom_minimum_size = Vector2(1000, 700)
@@ -297,38 +322,21 @@ script = ExtResource("16_b3802")
 game_manager = NodePath("../../../GameManager")
 combat_node = NodePath("../../../WALKA")
 map_node = NodePath("../..")
-enemy_icons = Array[Texture2D]([ExtResource("17_hibaj"), ExtResource("18_pdsj5"), ExtResource("19_ueoa1"), ExtResource("20_6vcvc"), ExtResource("21_7k868"), ExtResource("22_hpc6h"), ExtResource("23_kltya"), ExtResource("24_e08e2"), ExtResource("25_neg2b"), ExtResource("26_r33sp")])
+enemy_icons = Array[Texture2D]([null, null, null, null, null, null, null, null, null, null, null, null])
 node_type_sprites = Array[Texture2D]([ExtResource("27_neg2b"), ExtResource("28_r33sp"), ExtResource("29_hdf80"), ExtResource("30_jwpg7"), ExtResource("31_k2e45")])
-hud_hp_label = NodePath("Label")
-hud_gold_label = NodePath("Label2")
+hud_hp_label = NodePath("../../../Background/PasekGorny/HP/HPText")
+hud_gold_label = NodePath("../../../Background/PasekGorny/łuski/Label2")
 preview_gold_label = NodePath("Label3")
 deck_viewer = NodePath("../../../Pogląd")
 view_deck_button = NodePath("../../viewDeck")
 shop_preview_texture = ExtResource("11_536cc")
 
-[node name="Label" type="Label" parent="MAPA/ScrollContainer/MapArea"]
-layout_mode = 0
-offset_left = 405.55475
-offset_top = 56.162605
-offset_right = 460.55475
-offset_bottom = 79.16261
-text = "222222"
-
-[node name="Label2" type="Label" parent="MAPA/ScrollContainer/MapArea"]
-layout_mode = 0
-offset_left = 532.4064
-offset_top = 57.130924
-offset_right = 706.4801
-offset_bottom = 128.78667
-text = "222222"
-horizontal_alignment = 1
-
 [node name="Label3" type="Label" parent="MAPA/ScrollContainer/MapArea"]
 layout_mode = 0
-offset_left = 53.703568
-offset_top = 605.2005
-offset_right = 108.70357
-offset_bottom = 628.2005
+offset_left = 370.91522
+offset_top = 630.419
+offset_right = 425.91522
+offset_bottom = 653.419
 text = "222222"
 
 [node name="viewDeck" type="Button" parent="MAPA"]

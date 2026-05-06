@@ -158,8 +158,10 @@ func _on_node_hovered(grid_pos: Vector2):
 	# --- Sklep (typ 4) – osobny podgląd ---
 	if room_type == 4:
 		for child in enemies_icon_container.get_children():
+			enemies_icon_container.remove_child(child) # <--- POPRAWKA
 			child.queue_free()
 		for child in rewards_icon_container.get_children():
+			rewards_icon_container.remove_child(child) # <--- POPRAWKA
 			child.queue_free()
 
 		# Ikona sklepu
@@ -191,25 +193,44 @@ func _on_node_hovered(grid_pos: Vector2):
 	if not map_enemies.has(grid_pos):
 		return
 
-	# --- Rysuj przeciwników ---
+# --- Rysuj przeciwników ---
 	var enemies_list = map_enemies[grid_pos]
 	for child in enemies_icon_container.get_children():
+		enemies_icon_container.remove_child(child) 
 		child.queue_free()
 		
 	for enemy_id in enemies_list:
 		var icon_rect = TextureRect.new()
-		if enemy_id < enemy_icons.size() and enemy_icons[enemy_id] != null:
-			icon_rect.texture = enemy_icons[enemy_id]
+		
+		# --- NOWY KOD ŁADOWANIA Z BAZY ---
+		if EnemyDatabase.ENEMY.has(enemy_id):
+			# Pobieramy nazwę obrazka z bazy (indeks 1 w tablicy wroga)
+			var sprite_name = EnemyDatabase.ENEMY[enemy_id][1]
+			
+			# Tworzymy ścieżkę do pliku. 
+			# UWAGA: ZMIEŃ "res://Sprites/Enemies/" NA FAKTYCZNĄ ŚCIEŻKĘ W TWOIM PROJEKCIE!
+			var texture_path = "res://Art/Enemy/" + sprite_name + ".png"
+
+			
+			# Ładujemy zasób
+			if ResourceLoader.exists(texture_path):
+				var loaded_texture = load(texture_path)
+				icon_rect.texture = loaded_texture
+			else:
+				push_warning("Brak pliku graficznego dla wroga: ", texture_path)
 		else:
-			push_warning("Missing icon for enemy ID: ", enemy_id)
+			push_warning("Brak wroga w EnemyDatabase dla ID: ", enemy_id)
+		# ---------------------------------
+		
 		icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		icon_rect.custom_minimum_size = Vector2(300, 300)
+		icon_rect.custom_minimum_size = Vector2(150, 150) # Zmniejszone by panel się nie "rozjeżdżał"
 		icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		enemies_icon_container.add_child(icon_rect)
 		
 	# --- Rysuj nagrody (karty) ---
 	for child in rewards_icon_container.get_children():
+		rewards_icon_container.remove_child(child) # <--- POPRAWKA
 		child.queue_free()
 		
 	if map_rewards.has(grid_pos):
@@ -392,6 +413,7 @@ func draw_map_visuals():
 		var btn = Button.new()
 		btn.position = grid_to_pixel(grid_pos) - Vector2(25, 25)
 		btn.custom_minimum_size = Vector2(50, 50)
+		btn.size = Vector2(50, 50)
 		btn.text = ""
 		btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		
