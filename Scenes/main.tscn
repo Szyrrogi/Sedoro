@@ -319,17 +319,17 @@ scale = Vector2(1.0622373, 1.1595463)
 custom_minimum_size = Vector2(1000, 700)
 layout_mode = 2
 script = ExtResource("16_b3802")
+enemy_icons = Array[Texture2D]([null, null, null, null, null, null, null, null, null, null, null, null])
+node_type_sprites = Array[Texture2D]([ExtResource("27_neg2b"), ExtResource("28_r33sp"), ExtResource("29_hdf80"), ExtResource("30_jwpg7"), ExtResource("31_k2e45")])
+shop_preview_texture = ExtResource("11_536cc")
 game_manager = NodePath("../../../GameManager")
 combat_node = NodePath("../../../WALKA")
 map_node = NodePath("../..")
-enemy_icons = Array[Texture2D]([null, null, null, null, null, null, null, null, null, null, null, null])
-node_type_sprites = Array[Texture2D]([ExtResource("27_neg2b"), ExtResource("28_r33sp"), ExtResource("29_hdf80"), ExtResource("30_jwpg7"), ExtResource("31_k2e45")])
 hud_hp_label = NodePath("../../../Background/PasekGorny/HP/HPText")
 hud_gold_label = NodePath("../../../Background/PasekGorny/łuski/Label2")
 preview_gold_label = NodePath("Label3")
 deck_viewer = NodePath("../../../Pogląd")
 view_deck_button = NodePath("../../viewDeck")
-shop_preview_texture = ExtResource("11_536cc")
 
 [node name="Label3" type="Label" parent="MAPA/ScrollContainer/MapArea"]
 layout_mode = 0
@@ -346,7 +346,7 @@ offset_right = 138.0
 offset_bottom = 670.0
 text = "Decj"
 
-[node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("reward_panel", "reward_container", "combat_node", "map_node", "shop_node", "deck", "hand", "discard", "end_turn_button", "mana_manager", "player", "card_manager", "passive_manager")]
+[node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("reward_panel", "reward_container", "combat_node", "map_node", "shop_node", "deck", "hand", "discard", "end_turn_button", "mana_manager", "player", "card_manager", "passive_manager", "map_generator")]
 position = Vector2(0, -274.845)
 script = ExtResource("9_hptm8")
 reward_panel = NodePath("../RewardPanel")
@@ -364,6 +364,7 @@ player = NodePath("../WALKA/Player")
 card_manager = NodePath("../CardManager")
 passive_manager = NodePath("passibeManager")
 enemy_scene = ExtResource("12_6iyac")
+map_generator = NodePath("../MAPA/ScrollContainer/MapArea")
 
 [node name="passibeManager" type="Node" parent="GameManager" node_paths=PackedStringArray("game_manager")]
 script = ExtResource("29_6vcvc")

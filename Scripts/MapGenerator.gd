@@ -72,6 +72,45 @@ func _ready():
 		scroll.scroll_horizontal = 0
 
 # ==========================================
+# NOWE: Pełne wygenerowanie nowej mapy (reset + odbudowa)
+# ==========================================
+func regenerate_map():
+	print("[MapGenerator] Regeneruję mapę dla iteracji ", RunManager.current_iteration, "...")
+
+	# 1. Usuń wszystkie stare dzieci mapy (linie, przyciski węzłów)
+	#    Zostawiamy preview_panel (zbudowany kodem w _create_preview_ui)
+	for child in get_children():
+		if child == preview_panel or child.get_parent() == preview_panel:
+			continue
+		# CanvasLayer zawiera preview_panel – też go zostawiamy
+		if child is CanvasLayer:
+			continue
+		child.queue_free()
+
+	# 2. Reset stanu mapy
+	map_nodes.clear()
+	map_edges.clear()
+	map_enemies.clear()
+	map_rewards.clear()
+	map_gold.clear()
+	current_node = Vector2.ZERO
+	visited_nodes.clear()
+
+	# 3. Odbuduj
+	await get_tree().process_frame  # daj chwilę by queue_free się wykonał
+	generate_map()
+	assign_room_data()
+	draw_map_visuals()
+
+	# 4. Pokaż mapę
+	if combat_node:
+		combat_node.hide()
+	if map_node:
+		map_node.show()
+
+	print("[MapGenerator] Nowa mapa gotowa!")
+
+# ==========================================
 # HUD – odświeżanie HP i złota (z Inspektora)
 # ==========================================
 
@@ -158,10 +197,10 @@ func _on_node_hovered(grid_pos: Vector2):
 	# --- Sklep (typ 4) – osobny podgląd ---
 	if room_type == 4:
 		for child in enemies_icon_container.get_children():
-			enemies_icon_container.remove_child(child) # <--- POPRAWKA
+			enemies_icon_container.remove_child(child)
 			child.queue_free()
 		for child in rewards_icon_container.get_children():
-			rewards_icon_container.remove_child(child) # <--- POPRAWKA
+			rewards_icon_container.remove_child(child)
 			child.queue_free()
 
 		# Ikona sklepu
@@ -190,6 +229,42 @@ func _on_node_hovered(grid_pos: Vector2):
 		preview_panel.visible = true
 		return
 
+	# --- Boss (typ 5) – NOWE: podgląd hero bossa jeśli RunManager.is_hero_boss() ---
+	if room_type == 5:
+		for child in enemies_icon_container.get_children():
+			enemies_icon_container.remove_child(child)
+			child.queue_free()
+		for child in rewards_icon_container.get_children():
+			rewards_icon_container.remove_child(child)
+			child.queue_free()
+
+		var boss_icon = TextureRect.new()
+		boss_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		boss_icon.custom_minimum_size = Vector2(200, 200)
+		boss_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		boss_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+
+		if RunManager.is_hero_boss():
+			var tex_path = "res://Art/Enemy/Hero2.3.png"
+			if ResourceLoader.exists(tex_path):
+				boss_icon.texture = load(tex_path)
+		else:
+			# Zwykły boss – użyj pierwszej grafiki z enemy_icons jeśli dostępna
+			if enemy_icons.size() > 0:
+				boss_icon.texture = enemy_icons[0]
+
+		enemies_icon_container.add_child(boss_icon)
+
+		var desc = Label.new()
+		desc.text = "⚔️ BOSS\n\n" + ("Poprzedni Bohater!" if RunManager.is_hero_boss() else "Niebezpieczny wróg!")
+		desc.add_theme_font_size_override("font_size", 26)
+		desc.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		desc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		rewards_icon_container.add_child(desc)
+
+		preview_panel.visible = true
+		return
+
 	if not map_enemies.has(grid_pos):
 		return
 
@@ -202,17 +277,9 @@ func _on_node_hovered(grid_pos: Vector2):
 	for enemy_id in enemies_list:
 		var icon_rect = TextureRect.new()
 		
-		# --- NOWY KOD ŁADOWANIA Z BAZY ---
 		if EnemyDatabase.ENEMY.has(enemy_id):
-			# Pobieramy nazwę obrazka z bazy (indeks 1 w tablicy wroga)
 			var sprite_name = EnemyDatabase.ENEMY[enemy_id][1]
-			
-			# Tworzymy ścieżkę do pliku. 
-			# UWAGA: ZMIEŃ "res://Sprites/Enemies/" NA FAKTYCZNĄ ŚCIEŻKĘ W TWOIM PROJEKCIE!
 			var texture_path = "res://Art/Enemy/" + sprite_name + ".png"
-
-			
-			# Ładujemy zasób
 			if ResourceLoader.exists(texture_path):
 				var loaded_texture = load(texture_path)
 				icon_rect.texture = loaded_texture
@@ -220,17 +287,16 @@ func _on_node_hovered(grid_pos: Vector2):
 				push_warning("Brak pliku graficznego dla wroga: ", texture_path)
 		else:
 			push_warning("Brak wroga w EnemyDatabase dla ID: ", enemy_id)
-		# ---------------------------------
 		
 		icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		icon_rect.custom_minimum_size = Vector2(150, 150) # Zmniejszone by panel się nie "rozjeżdżał"
+		icon_rect.custom_minimum_size = Vector2(150, 150)
 		icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		enemies_icon_container.add_child(icon_rect)
 		
 	# --- Rysuj nagrody (karty) ---
 	for child in rewards_icon_container.get_children():
-		rewards_icon_container.remove_child(child) # <--- POPRAWKA
+		rewards_icon_container.remove_child(child)
 		child.queue_free()
 		
 	if map_rewards.has(grid_pos):
@@ -242,82 +308,81 @@ func _on_node_hovered(grid_pos: Vector2):
 			card_wrapper.custom_minimum_size = Vector2(200, 300)
 			
 			var card_inst = SCENA_KARTY.instantiate()
+			# mouse_filter nie istnieje na Node2D – kolizje wyłącza _wylacz_kolizje_dla_myszki
 			card_wrapper.add_child(card_inst)
 			card_inst.setup_card(card_id)
-			card_inst.scale_normal = Vector2(0.5, 0.5)
-			card_inst.scale_hover = Vector2(0.5, 0.5)
-			card_inst.scale = Vector2(0.5, 0.5)
-			card_inst.set_start_position(Vector2(80, 120))
-			_wylacz_kolizje_dla_myszki(card_inst)
-			rewards_icon_container.add_child(card_wrapper)
-	
-	# --- Złoto za walkę – aktualizuje label z Inspektora ---
-	if preview_gold_label:
-		if map_gold.has(grid_pos) and map_gold[grid_pos] > 0:
-			preview_gold_label.text = "💰 +" + str(map_gold[grid_pos]) + " złota"
-		else:
-			preview_gold_label.text = ""
-		preview_gold_label.visible = true
 			
+			if card_inst.has_method("set_start_position"):
+				card_inst.set_start_position(Vector2(100, 150))
+			else:
+				card_inst.position = Vector2(100, 150)
+				
+			card_inst.scale = Vector2(0.8, 0.8)
+			_wylacz_kolizje_dla_myszki(card_inst)
+			
+			rewards_icon_container.add_child(card_wrapper)
+
+	if preview_gold_label and map_gold.has(grid_pos):
+		var gold_val = map_gold[grid_pos]
+		preview_gold_label.text = "💰 " + str(gold_val)
+		preview_gold_label.visible = gold_val > 0
+	elif preview_gold_label:
+		preview_gold_label.visible = false
+
 	preview_panel.visible = true
 
 func _on_node_unhovered():
 	preview_panel.visible = false
-	if preview_gold_label:
-		preview_gold_label.visible = false
+
+# ==========================================
+# 1. MAP GENERATION
+# ==========================================
 
 func assign_room_data():
-	map_enemies.clear()
-	map_rewards.clear()
-	map_gold.clear()
 	for grid_pos in map_nodes.keys():
 		var room_type = map_nodes[grid_pos]
-		
-		if room_type == 4 or room_type == 3:
-			pass
-		else:
-			if game_manager and game_manager.has_method("get_random_enemy_encounter"):
-				map_enemies[grid_pos] = game_manager.get_random_enemy_encounter(room_type)
-			else:
-				map_enemies[grid_pos] = [0]
-			
-			var total_gold = 0
-			for enemy_id in map_enemies[grid_pos]:
-				if EnemyDatabase.ENEMY.has(enemy_id):
-					total_gold += EnemyDatabase.ENEMY[enemy_id][4]
-			map_gold[grid_pos] = total_gold
-			
-		if game_manager and game_manager.has_method("get_random_card_rewards"):
-			map_rewards[grid_pos] = game_manager.get_random_card_rewards()
-		else:
+		if room_type == 1 or room_type == 2 or room_type == 3:
+			var encounter = get_random_enemy_encounter(room_type)
+			map_enemies[grid_pos] = encounter
+			map_rewards[grid_pos] = get_random_card_rewards()
+			map_gold[grid_pos] = randi_range(5, 15)
+		elif room_type == 5:
+			# Boss – horda będzie obsłużona specjalnie przy wejściu
+			map_enemies[grid_pos] = []
 			map_rewards[grid_pos] = []
-
-
-# ==========================================
-# 1. MAP GENERATION LOGIC
-# ==========================================
+			map_gold[grid_pos] = 0
 
 func get_room_type() -> int:
-	var r = randf()
-	if r < 0.15: return 3
-	elif r < 0.30: return 2
-	else: return 1
+	var roll = randf()
+	if roll < 0.55:
+		return 1
+	elif roll < 0.80:
+		return 2
+	else:
+		return 3
 
-func add_edge(from_node: Vector2, to_node: Vector2):
-	for edge in map_edges:
-		if edge["from"] == from_node and edge["to"] == to_node:
-			return
-	map_edges.append({"from": from_node, "to": to_node})
+func get_random_enemy_encounter(room_type: int) -> Array:
+	if not game_manager:
+		return [0]
+	return game_manager.get_random_enemy_encounter(room_type)
+
+func get_random_card_rewards() -> Array:
+	if not game_manager:
+		return []
+	return game_manager.get_random_card_rewards()
+
+func add_edge(from: Vector2, to: Vector2):
+	map_edges.append({"from": from, "to": to})
 
 func generate_random_level(prev_lvl: int, curr_lvl: int):
 	var prev_nodes = []
 	for key in map_nodes.keys():
 		if key.x == prev_lvl:
 			prev_nodes.append(key.y)
-			
+	
 	for pos in prev_nodes:
 		var created_connection = false
-		
+			
 		if randf() < 0.80:
 			map_nodes[Vector2(curr_lvl, pos)] = get_room_type()
 			add_edge(Vector2(prev_lvl, pos), Vector2(curr_lvl, pos))
@@ -491,12 +556,27 @@ func trigger_room_action(room_type: int, room_enemies: Array, room_rewards: Arra
 	if not game_manager or not combat_node or not map_node:
 		return
 	map_node.hide()
+
 	# Pole 4 = Sklep
 	if room_type == 4:
 		game_manager.open_shop()
-	else:
+		return
+
+	# Pole 5 = Boss
+	if room_type == 5:
 		combat_node.show()
-		game_manager.start_combat(room_enemies, room_rewards, room_type)
+		if RunManager.is_hero_boss():
+			# Najpierw wyczyść i spawnuj hero bossa
+			game_manager.spawn_hero_boss()
+			# Potem inicjuj walkę BEZ spawn_horde (skip_spawn=true)
+			game_manager.start_combat([], [], 5, true, true)
+		else:
+			game_manager.start_combat(room_enemies, room_rewards, room_type, true, false)
+		return
+
+	# Normalny pokój
+	combat_node.show()
+	game_manager.start_combat(room_enemies, room_rewards, room_type, false)
 
 func is_move_valid(target_pos: Vector2) -> bool:
 	if current_node == Vector2.ZERO:

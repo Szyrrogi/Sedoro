@@ -10,6 +10,8 @@ var pending_rewards: Array = []
 var gold: int = 0
 var pending_gold: int = 0   # złoto za bieżącą walkę (ustawiane przez MapGenerator)
 
+# NOWE: czy aktualnie trwa walka z bossem końca mapy
+var fighting_boss: bool = false
 
 @export var use_random_encounters: bool = true
 
@@ -35,6 +37,9 @@ var pending_gold: int = 0   # złoto za bieżącą walkę (ustawiane przez MapGe
 @export var custom_enemy_count: int = 0
 @export var default_enemy_id: int = 1
 
+# NOWE: referencja do MapGenerator – potrzebna do regenerowania mapy
+@export var map_generator: Node
+
 enum State { PLAYER_START, PLAYER_ACTION, ENEMY_TURN, BATTLE_ENDED }
 var current_state = State.PLAYER_START
 
@@ -48,12 +53,13 @@ func _ready():
 	if end_turn_button:
 		end_turn_button.pressed.connect(_on_end_turn_button_pressed)
 
-func start_combat(horde_data: Array = [], rewards: Array = [], room_type: int = 1):
-	print("\n--- INICJACJA WALKI --- Typ pokoju: ", room_type)
+func start_combat(horde_data: Array = [], rewards: Array = [], room_type: int = 1, is_boss: bool = false, skip_spawn: bool = false):
+	print("\n--- INICJACJA WALKI --- Typ pokoju: ", room_type, " | Boss: ", is_boss)
 	print("Otrzymane nagrody z mapy: ", rewards)
 	
+	fighting_boss = is_boss
 	pending_rewards = rewards
-	
+
 	# === 1. CZYSZCZENIE KART ===
 	var leftover_cards = hand.get_all_cards().duplicate()
 	for card in leftover_cards:
@@ -78,7 +84,9 @@ func start_combat(horde_data: Array = [], rewards: Array = [], room_type: int = 
 		passive_manager.clear_all_passives()
 	
 	# === 3. SPAWN PRZECIWNIKÓW ===
-	spawn_horde(horde_data)
+	# skip_spawn=true gdy hero boss już został spawnowany przez spawn_hero_boss()
+	if not skip_spawn:
+		spawn_horde(horde_data)
 	
 	await get_tree().create_timer(0.5).timeout
 	start_player_turn()
@@ -97,21 +105,121 @@ func open_shop():
 	shop_node.open_shop()
 
 func win_battle():
-	print("Walka wygrana! Sprawdzam nagrody...")
-	current_state = State.BATTLE_ENDED 
-	
+	print("Walka wygrana!")
+	current_state = State.BATTLE_ENDED
+
 	# NOWE: Dodaj złoto za pokonanych wrogów
 	if pending_gold > 0:
 		gold += pending_gold
 		print("Gracz otrzymuje ", pending_gold, " złota! Łącznie: ", gold)
 		pending_gold = 0
-	
+
+	# NOWE: Jeśli wygrał z bossem końca mapy → zapisz i zresetuj
+	if fighting_boss:
+		fighting_boss = false
+		await _handle_boss_victory()
+		return
+
 	if pending_rewards.size() > 0:
 		print("Znaleziono nagrody: ", pending_rewards, ". Pokazuję ekran.")
 		show_reward_screen()
 	else:
 		print("Brak nagród dla tego pokoju. Powrót na mapę.")
 		return_to_map()
+
+# ============================================================
+# NOWE: Obsługa wygranej z bossem końca mapy
+# ============================================================
+func _handle_boss_victory():
+	print("\n=== BOSS POKONANY! Zapisuję przejście... ===")
+
+	# 1. Zbierz pełną talię gracza (talia + odrzucone + ręka)
+	var full_deck: Array = []
+	if deck:
+		for card_id in deck.deck_data:
+			full_deck.append(int(card_id))
+	if discard:
+		for card_id in discard.discard_data:
+			full_deck.append(int(card_id))
+	if hand:
+		for card_node in hand.get_all_cards():
+			# Próbuj różnych sposobów pobrania ID karty z noda
+			if "card_data_id" in card_node:
+				full_deck.append(int(card_node.card_data_id))
+			elif "card_id" in card_node:
+				full_deck.append(int(card_node.card_id))
+			elif card_node.has_method("get_card_id"):
+				full_deck.append(int(card_node.get_card_id()))
+
+	print("Pełny deck do zapisu: ", full_deck, " (", full_deck.size(), " kart)")
+	print("DEBUG – deck node: ", deck, " | deck_data: ", deck.deck_data if deck else "BRAK")
+	print("DEBUG – discard node: ", discard, " | discard_data: ", discard.discard_data if discard else "BRAK")
+
+	# 2. Zapisz przez RunManager (NIE zmienia jeszcze current_iteration)
+	RunManager.save_run(full_deck)
+	print("Zapisany deck gracza: ", full_deck)
+
+	# 3. Zresetuj gracza – get_starting_deck() czyta STARĄ iterację (jeszcze iteracja 0 → STARTING_DECK)
+	_reset_player_for_new_run()
+
+	# 4. Dopiero TERAZ przesuń do następnej iteracji
+	RunManager.advance_iteration()
+
+	# 5. Wygeneruj nową mapę
+	_regenerate_map()
+
+	print("=== Nowa mapa wygenerowana! Iteracja: ", RunManager.current_iteration, " ===\n")
+
+func _reset_player_for_new_run():
+	print("Resetuję gracza do nowego przejścia...")
+
+	# Reset HP
+	if player:
+		player.current_health = player.max_health
+		player.current_armor = 0
+		if player.health_bar:
+			player.health_bar.max_value = player.max_health
+			player.health_bar.value = player.max_health
+		if player.white_health_bar:
+			player.white_health_bar.value = player.max_health
+		if player.has_method("reset_combat_stats"):
+			player.reset_combat_stats()
+
+	# Reset złota
+	gold = 0
+
+	# Wyczyść rękę (node'y kart)
+	if hand:
+		for card_node in hand.get_all_cards().duplicate():
+			hand.remove_card(card_node)
+			card_node.queue_free()
+
+	# Wyczyść odrzucone – dane i node'y
+	if discard:
+		discard.discard_data.clear()
+		for card_node in discard.get_children():
+			card_node.queue_free()
+
+	# Reset talii – TYLKO dane (deck nie trzyma node'ów dzieci między walkami)
+	var new_starting_deck = RunManager.get_starting_deck()
+	print("Nowa startowa talia: ", new_starting_deck, " (", new_starting_deck.size(), " kart)")
+	if deck:
+		deck.deck_data = new_starting_deck.duplicate()
+		deck.deck_data.shuffle()
+		deck.update_visuals()
+		print("deck.deck_data po resecie: ", deck.deck_data.size(), " kart")
+
+func _regenerate_map():
+	if not map_generator:
+		push_error("GameManager: map_generator nie jest przypisany w Inspektorze!")
+		return
+
+	if map_generator.has_method("regenerate_map"):
+		map_generator.regenerate_map()
+	else:
+		push_error("GameManager: MapGenerator nie ma metody regenerate_map!")
+
+# ============================================================
 
 func show_reward_screen():
 	if not reward_panel or not reward_container or not card_scene_for_rewards:
@@ -226,6 +334,25 @@ func spawn_horde(horde: Array):
 		
 		enemy_inst.global_position = Vector2(start_x + (i * spawn_spacing), spawn_start_position.y)
 		enemies.append(enemy_inst)
+
+# NOWE: Spawn bossa-bohatera z deckiem z poprzedniego przejścia
+func spawn_hero_boss():
+	for enemy in enemies:
+		if is_instance_valid(enemy):
+			enemy.queue_free()
+	enemies.clear()
+
+	var boss_inst = enemy_scene.instantiate()
+	add_child(boss_inst)
+	boss_inst.player = player
+	boss_inst.game_manager = self
+	boss_inst.modulate = Color(1, 1, 1)
+
+	# Ustaw dane bossa ręcznie (nie przez setup() – tam jest EnemyDatabase)
+	boss_inst.setup_as_hero_boss(RunManager.get_boss_deck())
+
+	boss_inst.global_position = spawn_start_position
+	enemies.append(boss_inst)
 		
 func _process(delta: float) -> void:
 	mana_manager.set_mana(mana)
