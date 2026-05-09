@@ -19,6 +19,7 @@ var fighting_boss: bool = false
 @export var combat_node: Node
 @export var map_node: Node
 @export var shop_node: Control   # Przypisz ShopScreen node w Inspektorze
+@export var save_button: Button
 
 @export var deck: Node2D
 @export var hand: Node2D
@@ -57,6 +58,9 @@ func start_combat(horde_data: Array = [], rewards: Array = [], room_type: int = 
 	print("\n--- INICJACJA WALKI --- Typ pokoju: ", room_type, " | Boss: ", is_boss)
 	print("Otrzymane nagrody z mapy: ", rewards)
 	
+	if save_button:
+		save_button.hide()
+		
 	fighting_boss = is_boss
 	pending_rewards = rewards
 
@@ -103,7 +107,8 @@ func open_shop():
 	map_node.hide()
 	shop_node.show()
 	shop_node.open_shop()
-
+	if save_button:
+		save_button.hide()
 func win_battle():
 	print("Walka wygrana!")
 	current_state = State.BATTLE_ENDED
@@ -302,10 +307,15 @@ func return_to_map():
 	if combat_node and map_node:
 		combat_node.hide() 
 		map_node.show()
+	if save_button:
+		save_button.show()
 		
 func lose_battle():
 	print("Combat lost!")
 	current_state = State.BATTLE_ENDED 
+	
+	if FileAccess.file_exists(MID_RUN_SAVE_PATH):
+		DirAccess.remove_absolute(MID_RUN_SAVE_PATH)
 
 func spawn_horde(horde: Array):
 	for enemy in enemies:
@@ -484,3 +494,195 @@ func get_random_card_rewards() -> Array:
 	]
 	var chosen_rewards = possible_rewards.pick_random()
 	return chosen_rewards
+
+# ============================================================
+# SYSTEM ZAPISU W TRAKCIE GRY (MID-RUN SAVE)
+# ============================================================
+
+const MID_RUN_SAVE_PATH = "user://mid_run_save.json"
+
+# --- Funkcje pomocnicze dla Vector2 (JSON w Godocie nie obsługuje Vector2 jako kluczy) ---
+func _vec2_to_str(v: Vector2) -> String:
+	return str(v.x) + "," + str(v.y)
+
+func _str_to_vec2(s: String) -> Vector2:
+	var parts = s.split(",")
+	return Vector2(parts[0].to_float(), parts[1].to_float())
+
+# --- ZAPIS GRY ---
+func save_mid_run():
+	print("Rozpoczynam zapis stanu gry (Mid-Run)...")
+	var save_dict = {}
+
+	# 1. Postęp i Gracz
+	save_dict["iteration"] = RunManager.current_iteration
+	save_dict["gold"] = self.gold
+	
+	if player:
+		save_dict["player_hp"] = player.current_health
+		save_dict["player_max_hp"] = player.max_health
+
+	# 2. Talia (Zarówno talia jak i odrzucone, bo na mapie mogą być tu i tu)
+	var current_deck = []
+	if deck:
+		for c in deck.deck_data: current_deck.append(int(c))
+	save_dict["deck"] = current_deck
+	
+	var current_discard = []
+	if discard:
+		for c in discard.discard_data: current_discard.append(int(c))
+	save_dict["discard"] = current_discard
+
+	# 3. Pełen stan Mapy
+	var map_data = {}
+	if map_generator:
+		map_data["current_node_x"] = map_generator.current_node.x
+		map_data["current_node_y"] = map_generator.current_node.y
+
+		# Odwiedzone pokoje
+		var v_nodes = []
+		for vn in map_generator.visited_nodes:
+			v_nodes.append({"x": vn.x, "y": vn.y})
+		map_data["visited_nodes"] = v_nodes
+
+		# Pokoje (map_nodes)
+		var dict_nodes = {}
+		for k in map_generator.map_nodes.keys():
+			dict_nodes[_vec2_to_str(k)] = map_generator.map_nodes[k]
+		map_data["map_nodes"] = dict_nodes
+
+		# Krawędzie (map_edges)
+		var edges = []
+		for e in map_generator.map_edges:
+			edges.append({
+				"from_x": e["from"].x, "from_y": e["from"].y,
+				"to_x": e["to"].x, "to_y": e["to"].y
+			})
+		map_data["map_edges"] = edges
+
+		# Przeciwnicy (map_enemies)
+		var d_enemies = {}
+		for k in map_generator.map_enemies.keys():
+			d_enemies[_vec2_to_str(k)] = map_generator.map_enemies[k]
+		map_data["map_enemies"] = d_enemies
+
+		# Nagrody (map_rewards)
+		var d_rewards = {}
+		for k in map_generator.map_rewards.keys():
+			d_rewards[_vec2_to_str(k)] = map_generator.map_rewards[k]
+		map_data["map_rewards"] = d_rewards
+
+		# Złoto na mapie (map_gold)
+		var d_gold = {}
+		for k in map_generator.map_gold.keys():
+			d_gold[_vec2_to_str(k)] = map_generator.map_gold[k]
+		map_data["map_gold"] = d_gold
+
+	save_dict["map"] = map_data
+
+	# 4. Wykonanie zapisu do pliku
+	var file = FileAccess.open(MID_RUN_SAVE_PATH, FileAccess.WRITE)
+	if file:
+		file.store_string(JSON.stringify(save_dict, "\t"))
+		file.close()
+		print("✅ Zapis gry zakończony sukcesem!")
+	else:
+		push_error("❌ Błąd zapisu pliku: " + MID_RUN_SAVE_PATH)
+
+
+# --- ODCZYT GRY ---
+func load_mid_run() -> bool:
+	print("Próba wczytania stanu gry...")
+	if not FileAccess.file_exists(MID_RUN_SAVE_PATH):
+		print("Brak pliku zapisu!")
+		return false
+
+	var file = FileAccess.open(MID_RUN_SAVE_PATH, FileAccess.READ)
+	var json = JSON.new()
+	if json.parse(file.get_as_text()) != OK:
+		push_error("Błąd parsowania pliku zapisu!")
+		return false
+	
+	var data = json.get_data()
+
+	# 1. Przywracanie RunManagera (ustawienie aktualnego przejścia)
+	if data.has("iteration"):
+		RunManager._set_iteration(int(data["iteration"]))
+
+	# 2. Przywracanie Gracza
+	self.gold = int(data.get("gold", 0))
+	if player:
+		player.max_health = int(data.get("player_max_hp", 100))
+		player.current_health = int(data.get("player_hp", 100))
+		if player.health_bar:
+			player.health_bar.max_value = player.max_health
+			player.health_bar.value = player.current_health
+
+	# 3. Przywracanie Kart
+	if deck and data.has("deck"):
+		var loaded_deck = data["deck"]
+		deck.deck_data.clear()
+		for c in loaded_deck: deck.deck_data.append(int(c))
+		deck.update_visuals()
+		
+	if discard and data.has("discard"):
+		var loaded_discard = data["discard"]
+		discard.discard_data.clear()
+		for c in loaded_discard: discard.discard_data.append(int(c))
+
+	# 4. Przywracanie Mapy (Podmiana pełnego stanu)
+	if map_generator and data.has("map"):
+		var map_data = data["map"]
+
+		# Czyszczenie starej grafiki mapy (zostawiamy panel podglądu UI)
+		for child in map_generator.get_children():
+			if child == map_generator.preview_panel or child.get_parent() == map_generator.preview_panel or child is CanvasLayer:
+				continue
+			child.queue_free()
+
+		map_generator.map_nodes.clear()
+		map_generator.map_edges.clear()
+		map_generator.visited_nodes.clear()
+		map_generator.map_enemies.clear()
+		map_generator.map_rewards.clear()
+		map_generator.map_gold.clear()
+
+		# Wczytanie współrzędnych gracza
+		map_generator.current_node = Vector2(map_data.get("current_node_x", 0), map_data.get("current_node_y", 0))
+
+		for vn in map_data.get("visited_nodes", []):
+			map_generator.visited_nodes.append(Vector2(vn["x"], vn["y"]))
+
+		# Dekodowanie danych mapy
+		var m_nodes = map_data.get("map_nodes", {})
+		for k in m_nodes.keys():
+			map_generator.map_nodes[_str_to_vec2(k)] = int(m_nodes[k])
+
+		var m_edges = map_data.get("map_edges", [])
+		for e in m_edges:
+			map_generator.map_edges.append({
+				"from": Vector2(e["from_x"], e["from_y"]),
+				"to": Vector2(e["to_x"], e["to_y"])
+			})
+
+		var m_enemies = map_data.get("map_enemies", {})
+		for k in m_enemies.keys():
+			var arr = []
+			for id in m_enemies[k]: arr.append(int(id))
+			map_generator.map_enemies[_str_to_vec2(k)] = arr
+
+		var m_rewards = map_data.get("map_rewards", {})
+		for k in m_rewards.keys():
+			var arr = []
+			for id in m_rewards[k]: arr.append(int(id))
+			map_generator.map_rewards[_str_to_vec2(k)] = arr
+
+		var m_gold = map_data.get("map_gold", {})
+		for k in m_gold.keys():
+			map_generator.map_gold[_str_to_vec2(k)] = int(m_gold[k])
+
+		# Przerysowanie linii i węzłów
+		map_generator.draw_map_visuals()
+
+	print("✅ Stan gry pomyślnie wczytany!")
+	return true
