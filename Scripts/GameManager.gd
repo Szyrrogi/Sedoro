@@ -32,7 +32,7 @@ var fighting_boss: bool = false
 
 @export var enemies: Array[Node] 
 @export var enemy_scene: PackedScene 
-@export var spawn_start_position: Vector2 = Vector2(1300, 600) 
+@export var spawn_start_position: Vector2 = Vector2(1300, 400) 
 @export var spawn_spacing: float = 300.0 
 
 @export var custom_enemy_count: int = 0

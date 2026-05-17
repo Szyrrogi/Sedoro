@@ -458,8 +458,8 @@ func generate_map():
 # ==========================================
 
 func grid_to_pixel(grid_pos: Vector2) -> Vector2:
-	var x_pixel = 150 + ((grid_pos.x - 1) * 120)
-	var y_pixel = 100 + (grid_pos.y * 100)
+	var x_pixel = 150 + ((grid_pos.x - 1) * 150)
+	var y_pixel = 100 + (grid_pos.y * 70)
 	return Vector2(x_pixel, y_pixel)
 
 func draw_map_visuals():
