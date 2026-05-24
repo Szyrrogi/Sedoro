@@ -289,7 +289,7 @@ func _on_node_hovered(grid_pos: Vector2):
 			push_warning("Brak wroga w EnemyDatabase dla ID: ", enemy_id)
 		
 		icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		icon_rect.custom_minimum_size = Vector2(150, 150)
+		icon_rect.custom_minimum_size = Vector2(250, 250)
 		icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		enemies_icon_container.add_child(icon_rect)
@@ -300,25 +300,33 @@ func _on_node_hovered(grid_pos: Vector2):
 		child.queue_free()
 		
 	if map_rewards.has(grid_pos):
-		var rewards_list = map_rewards[grid_pos]
-		const SCENA_KARTY = preload("res://Object/Card.tscn")
-		for card_id in rewards_list:
+		var rewards_list = map_rewards[grid_pos] 
+		const SCENA_KARTY = preload("res://Object/Card.tscn") 
+		for card_id in rewards_list: 
+			# 1. Tworzymy kontener zewnętrzny, który określa odstępy na mapie
 			var card_wrapper = Control.new()
-			card_wrapper.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			card_wrapper.custom_minimum_size = Vector2(200, 300)
+			card_wrapper.mouse_filter = Control.MOUSE_FILTER_IGNORE 
+			# Ustawiamy mały rozmiar siatki, np. 100x150, żeby karty były blisko siebie
+			card_wrapper.custom_minimum_size = Vector2(180, 150) 
 			
-			var card_inst = SCENA_KARTY.instantiate()
-			# mouse_filter nie istnieje na Node2D – kolizje wyłącza _wylacz_kolizje_dla_myszki
-			card_wrapper.add_child(card_inst)
-			card_inst.setup_card(card_id)
+			# 2. Tworzymy dodatkowy, wewnętrzny węzeł Control, który posłuży za "skaler"
+			var scaler_node = Control.new()
+			scaler_node.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			# TUTAJ USTAWIAMY ROZMIAR I SKALĘ (0.5 to zmniejszenie o połowę)
+			scaler_node.scale = Vector2(0.5, 0.5)
+			card_wrapper.add_child(scaler_node)
 			
+			var card_inst = SCENA_KARTY.instantiate() 
+			scaler_node.add_child(card_inst) # Wrzucamy kartę do skalera 
+			card_inst.setup_card(card_id) 
+			
+			# Resetujemy pozycję karty do lewego górnego rogu skalera
 			if card_inst.has_method("set_start_position"):
-				card_inst.set_start_position(Vector2(100, 150))
+				card_inst.set_start_position(Vector2.ZERO)
 			else:
-				card_inst.position = Vector2(100, 150)
+				card_inst.position = Vector2.ZERO 
 				
-			card_inst.scale = Vector2(0.8, 0.8)
-			_wylacz_kolizje_dla_myszki(card_inst)
+			_wylacz_kolizje_dla_myszki(card_inst) 
 			
 			rewards_icon_container.add_child(card_wrapper)
 
@@ -476,11 +484,16 @@ func draw_map_visuals():
 	for grid_pos in map_nodes.keys():
 		var room_type = map_nodes[grid_pos]
 		var btn = Button.new()
+		
+		# Centrowanie przycisku w punkcie siatki
 		btn.position = grid_to_pixel(grid_pos) - Vector2(25, 25)
 		btn.custom_minimum_size = Vector2(50, 50)
 		btn.size = Vector2(50, 50)
 		btn.text = ""
 		btn.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		
+		# Ustawienie punktu obrotu/skalowania na środek (do efektu hover)
+		btn.pivot_offset = Vector2(25, 25)
 		
 		var style_empty = StyleBoxEmpty.new()
 		btn.add_theme_stylebox_override("normal", style_empty)
@@ -493,9 +506,12 @@ func draw_map_visuals():
 		if sprite_index >= 0 and sprite_index < node_type_sprites.size() and node_type_sprites[sprite_index] != null:
 			var tex_rect = TextureRect.new()
 			tex_rect.texture = node_type_sprites[sprite_index]
-			tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			
+			# Poprawne rozciąganie ikony na cały obszar buttona
 			tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 			tex_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+			
 			tex_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			btn.add_child(tex_rect)
 		else:
@@ -503,21 +519,43 @@ func draw_map_visuals():
 		
 		var color = Color.WHITE
 		match room_type:
-			1: color = Color("A8E6CF")
-			2: color = Color("FFD3B6")
-			3: color = Color("FF8A8A")
-			4: color = Color("C3B1E1")
-			5: color = Color("FDFD96")
+			1: 
+				color = Color("A8E6CF")
+			2: 
+				color = Color("FFD3B6")
+			3: 
+				color = Color("FF8A8A")
+			4: 
+				color = Color("C3B1E1")
+			5: 
+				color = Color("FDFD96")
+				
 		btn.modulate = color
 		
+		# Podpięcie sygnałów logicznych mapy
 		btn.mouse_entered.connect(_on_node_hovered.bind(grid_pos))
 		btn.mouse_exited.connect(_on_node_unhovered)
 		btn.pressed.connect(_on_node_clicked.bind(grid_pos, room_type))
+		
+		# Podpięcie sygnałów efektu wizualnego (powiększenie)
+		btn.mouse_entered.connect(_scale_up_node.bind(btn))
+		btn.mouse_exited.connect(_scale_down_node.bind(btn))
+		
 		btn.set_meta("grid_pos", grid_pos)
 		btn.mouse_filter = Control.MOUSE_FILTER_PASS
 		add_child(btn)
 		
 	update_path_visuals()
+
+func _scale_up_node(btn: Button):
+	if btn.disabled: 
+		return 
+	var tween = create_tween().set_parallel(true)
+	tween.tween_property(btn, "scale", Vector2(1.2, 1.2), 0.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+
+func _scale_down_node(btn: Button):
+	var tween = create_tween().set_parallel(true)
+	tween.tween_property(btn, "scale", Vector2(1.0, 1.0), 0.15).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 # ==========================================
 # 3. INTERACTION AND MOVEMENT
@@ -640,3 +678,4 @@ func _wylacz_kolizje_dla_myszki(wezel: Node):
 		wezel.input_pickable = false
 	for dziecko in wezel.get_children():
 		_wylacz_kolizje_dla_myszki(dziecko)
+		

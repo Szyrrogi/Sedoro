@@ -1,4 +1,4 @@
-[gd_scene load_steps=37 format=3 uid="uid://cj07e7tcxt8aw"]
+[gd_scene load_steps=36 format=3 uid="uid://cj07e7tcxt8aw"]
 
 [ext_resource type="Texture2D" uid="uid://dh5pmnobyuurf" path="res://Art/Background/BackgroundUp1.png" id="2_344ge"]
 [ext_resource type="Script" uid="uid://deppbi7l0j7k7" path="res://Scripts/Deck.gd" id="3_344ge"]
@@ -20,7 +20,6 @@
 [ext_resource type="Texture2D" uid="uid://dbqlgbbmlq1d3" path="res://Art/Enemy/enemy_test.png" id="11_536cc"]
 [ext_resource type="Texture2D" uid="uid://bphqf50o6gks" path="res://Art/Background/uski.png" id="11_hpc6h"]
 [ext_resource type="PackedScene" uid="uid://ckx1a5k12nwo2" path="res://Scenes/Enemy.tscn" id="12_6iyac"]
-[ext_resource type="Texture2D" uid="uid://b2ohnuy8ebly0" path="res://Art/Background/Podglad kart.png" id="14_r33sp"]
 [ext_resource type="Script" uid="uid://cr4jpy03ksr4o" path="res://Scripts/ManaManager.gd" id="14_wsu2k"]
 [ext_resource type="Texture2D" uid="uid://ddidnxwdxqqij" path="res://Art/Icon/Mana/Mana2.png" id="15_k12tt"]
 [ext_resource type="Script" uid="uid://duu618euuy4dm" path="res://Scripts/MapGenerator.gd" id="16_b3802"]
@@ -113,32 +112,24 @@ offset_bottom = 61.655746
 text = "222222"
 horizontal_alignment = 1
 
-[node name="Pogląd" type="Control" parent="." node_paths=PackedStringArray("card_grid", "preview_container", "close_button", "map_node", "combat_node")]
+[node name="Pogląd" type="Control" parent="." node_paths=PackedStringArray("card_grid", "close_button", "map_node", "combat_node")]
+visible = false
 layout_mode = 3
 anchors_preset = 0
-offset_top = 46.0
 offset_right = 1911.0
 offset_bottom = 739.0
 script = ExtResource("8_jwpg7")
 card_scene = ExtResource("4_d1ilt")
 card_grid = NodePath("HFlowContainer")
-preview_container = NodePath("Preview")
 close_button = NodePath("Button")
 map_node = NodePath("../MAPA")
 combat_node = NodePath("../WALKA")
 
 [node name="ColorRect" type="ColorRect" parent="Pogląd"]
 layout_mode = 0
-offset_left = -4.0
-offset_top = -55.0
-offset_right = 1921.0
-offset_bottom = 732.0
-color = Color(0.13333334, 0.08627451, 0.101960786, 1)
-
-[node name="Sprite2D" type="Sprite2D" parent="Pogląd"]
-position = Vector2(969, 362)
-scale = Vector2(0.7380478, 0.73804784)
-texture = ExtResource("14_r33sp")
+offset_right = 1924.0
+offset_bottom = 734.0
+color = Color(0.5211406, 0.5211406, 0.5211405, 1)
 
 [node name="Label" type="Label" parent="Pogląd"]
 layout_mode = 0
@@ -156,20 +147,12 @@ offset_right = 253.0
 offset_bottom = 885.0
 text = "X"
 
-[node name="HFlowContainer" type="GridContainer" parent="Pogląd"]
+[node name="HFlowContainer" type="HFlowContainer" parent="Pogląd"]
 layout_mode = 0
-offset_left = 62.0
-offset_top = 132.0
-offset_right = 1991.0
-offset_bottom = 865.0
-columns = 8
-
-[node name="Preview" type="Control" parent="Pogląd"]
-anchors_preset = 0
-offset_left = 1337.0
-offset_top = 28.0
-offset_right = 1787.0
-offset_bottom = 670.0
+offset_left = 2.0
+offset_top = 4.0
+offset_right = 1931.0
+offset_bottom = 737.0
 
 [node name="SKLEP2" type="Control" parent="." node_paths=PackedStringArray("game_manager", "card_container", "heal_button", "heal_cost_label", "remove_button", "remove_cost_label", "leave_button", "deck_viewer")]
 visible = false
@@ -328,13 +311,6 @@ text = "Exit"
 
 [node name="MAPA" type="Node2D" parent="."]
 
-[node name="viewDeck" type="Button" parent="MAPA"]
-offset_left = 17.0
-offset_top = 614.0
-offset_right = 98.0
-offset_bottom = 679.0
-text = "Decj"
-
 [node name="ScrollContainer" type="ScrollContainer" parent="MAPA"]
 offset_left = 175.00002
 offset_top = 37.000004
@@ -367,6 +343,13 @@ offset_top = 630.419
 offset_right = 425.91522
 offset_bottom = 653.419
 text = "222222"
+
+[node name="viewDeck" type="Button" parent="MAPA"]
+offset_left = 57.0
+offset_top = 605.0
+offset_right = 138.0
+offset_bottom = 670.0
+text = "Decj"
 
 [node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("reward_panel", "reward_container", "combat_node", "map_node", "shop_node", "save_button", "deck", "hand", "discard", "end_turn_button", "mana_manager", "player", "card_manager", "passive_manager", "map_generator")]
 position = Vector2(0, -274.845)
