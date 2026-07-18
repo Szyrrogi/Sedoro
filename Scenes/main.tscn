@@ -114,6 +114,7 @@ text = "222222"
 horizontal_alignment = 1
 
 [node name="Pogląd" type="Control" parent="." node_paths=PackedStringArray("card_grid", "preview_container", "close_button", "map_node", "combat_node")]
+visible = false
 layout_mode = 3
 anchors_preset = 0
 offset_top = 46.0
@@ -255,7 +256,6 @@ offset_right = 187.0
 offset_bottom = 120.0
 
 [node name="WALKA" type="Node2D" parent="."]
-visible = false
 
 [node name="ManaManager" type="Node2D" parent="WALKA" node_paths=PackedStringArray("mana_sprite", "mana2_sprite")]
 script = ExtResource("14_wsu2k")
@@ -326,6 +326,35 @@ offset_right = 219.0
 offset_bottom = 780.0
 text = "Exit"
 
+[node name="DrawCardButton" type="Button" parent="WALKA"]
+offset_left = 1469.0
+offset_top = 696.0
+offset_right = 1587.0
+offset_bottom = 794.0
+text = "Dobierz karte"
+
+[node name="PhaseLabel" type="Label" parent="WALKA"]
+offset_left = 249.0
+offset_top = 3.0
+offset_right = 460.0
+offset_bottom = 75.0
+text = "FAZA"
+
+[node name="RollInfo" type="Label" parent="WALKA"]
+offset_left = 1474.0
+offset_top = 817.0
+offset_right = 1649.0
+offset_bottom = 887.0
+text = "Szansa na porażkę: 0%"
+
+[node name="PORAŻKA" type="Label" parent="WALKA/RollInfo"]
+layout_mode = 0
+offset_left = 13.0
+offset_top = 45.0
+offset_right = 188.0
+offset_bottom = 115.0
+text = "PORAŻKA"
+
 [node name="MAPA" type="Node2D" parent="."]
 
 [node name="viewDeck" type="Button" parent="MAPA"]
@@ -336,10 +365,10 @@ offset_bottom = 679.0
 text = "Decj"
 
 [node name="ScrollContainer" type="ScrollContainer" parent="MAPA"]
-offset_left = 175.00002
-offset_top = 37.000004
-offset_right = 2086.0
-offset_bottom = 706.1097
+offset_left = 175.0
+offset_top = 5.999998
+offset_right = 1975.9159
+offset_bottom = 706.0
 scale = Vector2(1.0622373, 1.1595463)
 horizontal_scroll_mode = 0
 vertical_scroll_mode = 0
@@ -368,7 +397,7 @@ offset_right = 425.91522
 offset_bottom = 653.419
 text = "222222"
 
-[node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("reward_panel", "reward_container", "combat_node", "map_node", "shop_node", "save_button", "deck", "hand", "discard", "end_turn_button", "mana_manager", "player", "card_manager", "passive_manager", "map_generator")]
+[node name="GameManager" type="Node2D" parent="." node_paths=PackedStringArray("reward_panel", "reward_container", "combat_node", "map_node", "shop_node", "save_button", "deck", "hand", "discard", "end_turn_button", "mana_manager", "player", "card_manager", "passive_manager", "map_generator", "draw_button", "phase_label", "roll_info_label", "fail_label")]
 position = Vector2(0, -274.845)
 script = ExtResource("9_hptm8")
 reward_panel = NodePath("../RewardPanel")
@@ -388,6 +417,10 @@ card_manager = NodePath("../CardManager")
 passive_manager = NodePath("passibeManager")
 enemy_scene = ExtResource("12_6iyac")
 map_generator = NodePath("../MAPA/ScrollContainer/MapArea")
+draw_button = NodePath("../WALKA/DrawCardButton")
+phase_label = NodePath("../WALKA/PhaseLabel")
+roll_info_label = NodePath("../WALKA/RollInfo")
+fail_label = NodePath("../WALKA/RollInfo/PORAŻKA")
 
 [node name="passibeManager" type="Node" parent="GameManager" node_paths=PackedStringArray("game_manager")]
 script = ExtResource("29_6vcvc")

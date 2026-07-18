@@ -1,16 +1,15 @@
 extends Node
 
-
 @export var reward_panel: Control
 @export var reward_container: Container
 @export var card_scene_for_rewards: PackedScene
 var pending_rewards: Array = []
 
-# NOWE: złoto gracza
+# Złoto gracza
 var gold: int = 0
-var pending_gold: int = 0   # złoto za bieżącą walkę (ustawiane przez MapGenerator)
+var pending_gold: int = 0
 
-# NOWE: czy aktualnie trwa walka z bossem końca mapy
+# Czy aktualnie trwa walka z bossem końca mapy
 var fighting_boss: bool = false
 
 @export var use_random_encounters: bool = true
@@ -18,7 +17,7 @@ var fighting_boss: bool = false
 # --- NODES TO ASSIGN IN INSPECTOR ---
 @export var combat_node: Node
 @export var map_node: Node
-@export var shop_node: Control   # Przypisz ShopScreen node w Inspektorze
+@export var shop_node: Control
 @export var save_button: Button
 
 @export var deck: Node2D
@@ -38,14 +37,26 @@ var fighting_boss: bool = false
 @export var custom_enemy_count: int = 0
 @export var default_enemy_id: int = 1
 
-# NOWE: referencja do MapGenerator – potrzebna do regenerowania mapy
+# Referencja do MapGenerator
 @export var map_generator: Node
+
+# ====================================================
+# NOWE ZMIENNE UI DLA SYSTEMU DOBIERANIA I FAZ
+# ====================================================
+@export var draw_button: Button
+@export var phase_label: Label
+@export var roll_info_label: Label
+@export var fail_label: Label
+
+var draw_fail_chance: int = 0
+var current_phase_name: String = "Dobieranie"
+# ====================================================
 
 enum State { PLAYER_START, PLAYER_ACTION, ENEMY_TURN, BATTLE_ENDED }
 var current_state = State.PLAYER_START
 
 const HAND_LIMIT = 10
-const CARDS_PER_TURN = 7
+const CARDS_PER_TURN = 7 # Zostawiam dla kompatybilności, ale dobieranie teraz jest manualne
 const MANA_MAX = 20
 
 var mana = 0
@@ -53,6 +64,8 @@ var mana = 0
 func _ready():
 	if end_turn_button:
 		end_turn_button.pressed.connect(_on_end_turn_button_pressed)
+	if draw_button:
+		draw_button.pressed.connect(_on_draw_button_pressed)
 
 func start_combat(horde_data: Array = [], rewards: Array = [], room_type: int = 1, is_boss: bool = false, skip_spawn: bool = false):
 	print("\n--- INICJACJA WALKI --- Typ pokoju: ", room_type, " | Boss: ", is_boss)
@@ -88,7 +101,6 @@ func start_combat(horde_data: Array = [], rewards: Array = [], room_type: int = 
 		passive_manager.clear_all_passives()
 	
 	# === 3. SPAWN PRZECIWNIKÓW ===
-	# skip_spawn=true gdy hero boss już został spawnowany przez spawn_hero_boss()
 	if not skip_spawn:
 		spawn_horde(horde_data)
 	
@@ -109,36 +121,29 @@ func open_shop():
 	shop_node.open_shop()
 	if save_button:
 		save_button.hide()
+
 func win_battle():
 	print("Walka wygrana!")
 	current_state = State.BATTLE_ENDED
 
-	# NOWE: Dodaj złoto za pokonanych wrogów
 	if pending_gold > 0:
 		gold += pending_gold
 		print("Gracz otrzymuje ", pending_gold, " złota! Łącznie: ", gold)
 		pending_gold = 0
 
-	# NOWE: Jeśli wygrał z bossem końca mapy → zapisz i zresetuj
 	if fighting_boss:
 		fighting_boss = false
 		await _handle_boss_victory()
 		return
 
 	if pending_rewards.size() > 0:
-		print("Znaleziono nagrody: ", pending_rewards, ". Pokazuję ekran.")
 		show_reward_screen()
 	else:
-		print("Brak nagród dla tego pokoju. Powrót na mapę.")
 		return_to_map()
 
-# ============================================================
-# NOWE: Obsługa wygranej z bossem końca mapy
-# ============================================================
 func _handle_boss_victory():
 	print("\n=== BOSS POKONANY! Zapisuję przejście... ===")
 
-	# 1. Zbierz pełną talię gracza (talia + odrzucone + ręka)
 	var full_deck: Array = []
 	if deck:
 		for card_id in deck.deck_data:
@@ -148,7 +153,6 @@ func _handle_boss_victory():
 			full_deck.append(int(card_id))
 	if hand:
 		for card_node in hand.get_all_cards():
-			# Próbuj różnych sposobów pobrania ID karty z noda
 			if "card_data_id" in card_node:
 				full_deck.append(int(card_node.card_data_id))
 			elif "card_id" in card_node:
@@ -156,29 +160,14 @@ func _handle_boss_victory():
 			elif card_node.has_method("get_card_id"):
 				full_deck.append(int(card_node.get_card_id()))
 
-	print("Pełny deck do zapisu: ", full_deck, " (", full_deck.size(), " kart)")
-	print("DEBUG – deck node: ", deck, " | deck_data: ", deck.deck_data if deck else "BRAK")
-	print("DEBUG – discard node: ", discard, " | discard_data: ", discard.discard_data if discard else "BRAK")
-
-	# 2. Zapisz przez RunManager (NIE zmienia jeszcze current_iteration)
 	RunManager.save_run(full_deck)
-	print("Zapisany deck gracza: ", full_deck)
-
-	# 3. Zresetuj gracza – get_starting_deck() czyta STARĄ iterację (jeszcze iteracja 0 → STARTING_DECK)
 	_reset_player_for_new_run()
-
-	# 4. Dopiero TERAZ przesuń do następnej iteracji
 	RunManager.advance_iteration()
-
-	# 5. Wygeneruj nową mapę
 	_regenerate_map()
-
-	print("=== Nowa mapa wygenerowana! Iteracja: ", RunManager.current_iteration, " ===\n")
 
 func _reset_player_for_new_run():
 	print("Resetuję gracza do nowego przejścia...")
 
-	# Reset HP
 	if player:
 		player.current_health = player.max_health
 		player.current_armor = 0
@@ -190,45 +179,31 @@ func _reset_player_for_new_run():
 		if player.has_method("reset_combat_stats"):
 			player.reset_combat_stats()
 
-	# Reset złota
 	gold = 0
 
-	# Wyczyść rękę (node'y kart)
 	if hand:
 		for card_node in hand.get_all_cards().duplicate():
 			hand.remove_card(card_node)
 			card_node.queue_free()
 
-	# Wyczyść odrzucone – dane i node'y
 	if discard:
 		discard.discard_data.clear()
 		for card_node in discard.get_children():
 			card_node.queue_free()
 
-	# Reset talii – TYLKO dane (deck nie trzyma node'ów dzieci między walkami)
 	var new_starting_deck = RunManager.get_starting_deck()
-	print("Nowa startowa talia: ", new_starting_deck, " (", new_starting_deck.size(), " kart)")
 	if deck:
 		deck.deck_data = new_starting_deck.duplicate()
 		deck.deck_data.shuffle()
 		deck.update_visuals()
-		print("deck.deck_data po resecie: ", deck.deck_data.size(), " kart")
 
 func _regenerate_map():
-	if not map_generator:
-		push_error("GameManager: map_generator nie jest przypisany w Inspektorze!")
-		return
-
+	if not map_generator: return
 	if map_generator.has_method("regenerate_map"):
 		map_generator.regenerate_map()
-	else:
-		push_error("GameManager: MapGenerator nie ma metody regenerate_map!")
-
-# ============================================================
 
 func show_reward_screen():
 	if not reward_panel or not reward_container or not card_scene_for_rewards:
-		push_error("BŁĄD: Brak przypisanych węzłów UI w inspektorze GameManager!")
 		return_to_map()
 		return
 		
@@ -313,7 +288,6 @@ func return_to_map():
 func lose_battle():
 	print("Combat lost!")
 	current_state = State.BATTLE_ENDED 
-	
 	if FileAccess.file_exists(MID_RUN_SAVE_PATH):
 		DirAccess.remove_absolute(MID_RUN_SAVE_PATH)
 
@@ -324,7 +298,6 @@ func spawn_horde(horde: Array):
 	enemies.clear() 
 	
 	if horde.is_empty():
-		push_error("Map passed an empty horde! Using fallback enemy ID 0")
 		horde = [0]
 
 	var enemy_count = horde.size()
@@ -334,18 +307,14 @@ func spawn_horde(horde: Array):
 	for i in range(enemy_count):
 		var enemy_id = horde[i]
 		var enemy_inst = enemy_scene.instantiate()
-		
 		add_child(enemy_inst)
-		
 		enemy_inst.player = player
 		enemy_inst.game_manager = self
 		enemy_inst.modulate = Color(1, 1, 1)
 		enemy_inst.setup(enemy_id)
-		
 		enemy_inst.global_position = Vector2(start_x + (i * spawn_spacing), spawn_start_position.y)
 		enemies.append(enemy_inst)
 
-# NOWE: Spawn bossa-bohatera z deckiem z poprzedniego przejścia
 func spawn_hero_boss():
 	for enemy in enemies:
 		if is_instance_valid(enemy):
@@ -357,10 +326,7 @@ func spawn_hero_boss():
 	boss_inst.player = player
 	boss_inst.game_manager = self
 	boss_inst.modulate = Color(1, 1, 1)
-
-	# Ustaw dane bossa ręcznie (nie przez setup() – tam jest EnemyDatabase)
 	boss_inst.setup_as_hero_boss(RunManager.get_boss_deck())
-
 	boss_inst.global_position = spawn_start_position
 	enemies.append(boss_inst)
 		
@@ -371,12 +337,26 @@ func _on_end_turn_button_pressed():
 	if current_state == State.PLAYER_ACTION:
 		end_player_turn()
 
+# ====================================================
+# NOWY SYSTEM TURY GRACZA (START)
+# ====================================================
 func start_player_turn():
 	current_state = State.PLAYER_START
 	print("\n--- PLAYER TURN START ---")
 	
 	mana = 0
 	card_manager.redraws_used = 0
+	
+	# Reset nowego systemu
+	draw_fail_chance = 0
+	set_phase("Dobieranie")
+	
+	if fail_label:
+		fail_label.hide()
+	if roll_info_label:
+		roll_info_label.text = "Szansa na porażkę: 0%"
+	if draw_button:
+		draw_button.disabled = false
 	
 	if player and "cards_drawn_this_turn" in player:
 		player.cards_drawn_this_turn = 0
@@ -389,28 +369,60 @@ func start_player_turn():
 	
 	player.modulate = Color(1.5, 1.5, 1.5)
 	
-	var current_hand_size = hand.get_child_count()
-	var cards_to_draw = CARDS_PER_TURN
+	current_state = State.PLAYER_ACTION
 
-	var draw_reduction = 0
-	if player and "draw_reduction_stacks" in player:
-		draw_reduction = player.draw_reduction_stacks
-	cards_to_draw = max(0, cards_to_draw - draw_reduction)
+func _on_draw_button_pressed():
+	if current_state != State.PLAYER_ACTION:
+		return
+		
+	if hand.get_child_count() >= HAND_LIMIT:
+		print("Pełna ręka!")
+		return
 
-	var space_in_hand = HAND_LIMIT - current_hand_size
-	var final_draw_count = min(cards_to_draw, space_in_hand)
+	set_phase("Dobieranie")
+
+	var roll = randi_range(1, 100)
+	var fail_threshold = draw_fail_chance
 	
-	if final_draw_count > 0:
-		var new_cards = await deck.draw_cards(final_draw_count)
+	if roll <= fail_threshold and fail_threshold > 0:
+		# --- PORAŻKA ---
+		if roll_info_label:
+			roll_info_label.text = "Wylosowano: %d. Porażka od: %d" % [roll, fail_threshold]
+		if fail_label:
+			fail_label.show()
+			
+		print("Porażka przy dobieraniu! Tura natychmiastowo zakończona.")
+		if draw_button:
+			draw_button.disabled = true
+			
+		end_player_turn() 
+	else:
+		# --- SUKCES ---
+		# Awaitujemy nową kartę z talii
+		var new_cards = await deck.draw_cards(1)
 		for card in new_cards:
 			hand.add_card(card)
 			if player and "cards_drawn_this_turn" in player:
 				player.cards_drawn_this_turn += 1
-			await get_tree().create_timer(0.2).timeout
-	else:
-		print("No cards drawn!")
-	
-	current_state = State.PLAYER_ACTION
+				
+		draw_fail_chance = min(draw_fail_chance + 5, 30)
+		
+		if roll_info_label:
+			roll_info_label.text = "Wylosowano: %d. Porażka od: %d\nKolejna szansa porażki: %d%%" % [roll, fail_threshold, draw_fail_chance]
+
+func set_phase(new_phase: String):
+	current_phase_name = new_phase
+	if phase_label:
+		phase_label.text = "Faza: " + current_phase_name
+		
+	# --- NOWE: Zarządzanie widocznością przycisku dobierania ---
+	if draw_button:
+		if current_phase_name == "Dobieranie":
+			draw_button.show() # Pokazuje przycisk
+			draw_button.disabled = false
+		else:
+			draw_button.hide() # Ukrywa przycisk w innych fazach
+# ====================================================
 
 func end_player_turn():
 	if current_state != State.PLAYER_ACTION:
@@ -418,6 +430,9 @@ func end_player_turn():
 	
 	print("Player turn ended. Discarding all cards...")
 	
+	if draw_button:
+		draw_button.disabled = true
+		
 	card_manager.active = 0
 	card_manager.set_active()
 	
@@ -439,10 +454,8 @@ func start_enemy_turn():
 	for enemy in enemies:
 		if is_instance_valid(enemy): 
 			enemy.modulate = Color(1.5, 1.5, 1.5)
-
 			if enemy.has_method("start_turn"):
 				enemy.start_turn()
-
 			enemy.action()
 				
 			await get_tree().create_timer(1).timeout
@@ -487,7 +500,6 @@ func get_random_enemy_encounter(room_type: int) -> Array:
 		5: return EnemyDatabase.HORD_TYPE3[randi() % EnemyDatabase.HORD_TYPE3.size()]
 	return [0]
 	
-	
 func get_random_card_rewards() -> Array:
 	var possible_rewards = [
 		[1, 2, 3], [4, 5], [1, 5, 6], [2, 7]
@@ -495,13 +507,8 @@ func get_random_card_rewards() -> Array:
 	var chosen_rewards = possible_rewards.pick_random()
 	return chosen_rewards
 
-# ============================================================
-# SYSTEM ZAPISU W TRAKCIE GRY (MID-RUN SAVE)
-# ============================================================
-
 const MID_RUN_SAVE_PATH = "user://mid_run_save.json"
 
-# --- Funkcje pomocnicze dla Vector2 (JSON w Godocie nie obsługuje Vector2 jako kluczy) ---
 func _vec2_to_str(v: Vector2) -> String:
 	return str(v.x) + "," + str(v.y)
 
@@ -509,12 +516,10 @@ func _str_to_vec2(s: String) -> Vector2:
 	var parts = s.split(",")
 	return Vector2(parts[0].to_float(), parts[1].to_float())
 
-# --- ZAPIS GRY ---
 func save_mid_run():
 	print("Rozpoczynam zapis stanu gry (Mid-Run)...")
 	var save_dict = {}
 
-	# 1. Postęp i Gracz
 	save_dict["iteration"] = RunManager.current_iteration
 	save_dict["gold"] = self.gold
 	
@@ -522,7 +527,6 @@ func save_mid_run():
 		save_dict["player_hp"] = player.current_health
 		save_dict["player_max_hp"] = player.max_health
 
-	# 2. Talia (Zarówno talia jak i odrzucone, bo na mapie mogą być tu i tu)
 	var current_deck = []
 	if deck:
 		for c in deck.deck_data: current_deck.append(int(c))
@@ -533,25 +537,21 @@ func save_mid_run():
 		for c in discard.discard_data: current_discard.append(int(c))
 	save_dict["discard"] = current_discard
 
-	# 3. Pełen stan Mapy
 	var map_data = {}
 	if map_generator:
 		map_data["current_node_x"] = map_generator.current_node.x
 		map_data["current_node_y"] = map_generator.current_node.y
 
-		# Odwiedzone pokoje
 		var v_nodes = []
 		for vn in map_generator.visited_nodes:
 			v_nodes.append({"x": vn.x, "y": vn.y})
 		map_data["visited_nodes"] = v_nodes
 
-		# Pokoje (map_nodes)
 		var dict_nodes = {}
 		for k in map_generator.map_nodes.keys():
 			dict_nodes[_vec2_to_str(k)] = map_generator.map_nodes[k]
 		map_data["map_nodes"] = dict_nodes
 
-		# Krawędzie (map_edges)
 		var edges = []
 		for e in map_generator.map_edges:
 			edges.append({
@@ -560,19 +560,16 @@ func save_mid_run():
 			})
 		map_data["map_edges"] = edges
 
-		# Przeciwnicy (map_enemies)
 		var d_enemies = {}
 		for k in map_generator.map_enemies.keys():
 			d_enemies[_vec2_to_str(k)] = map_generator.map_enemies[k]
 		map_data["map_enemies"] = d_enemies
 
-		# Nagrody (map_rewards)
 		var d_rewards = {}
 		for k in map_generator.map_rewards.keys():
 			d_rewards[_vec2_to_str(k)] = map_generator.map_rewards[k]
 		map_data["map_rewards"] = d_rewards
 
-		# Złoto na mapie (map_gold)
 		var d_gold = {}
 		for k in map_generator.map_gold.keys():
 			d_gold[_vec2_to_str(k)] = map_generator.map_gold[k]
@@ -580,7 +577,6 @@ func save_mid_run():
 
 	save_dict["map"] = map_data
 
-	# 4. Wykonanie zapisu do pliku
 	var file = FileAccess.open(MID_RUN_SAVE_PATH, FileAccess.WRITE)
 	if file:
 		file.store_string(JSON.stringify(save_dict, "\t"))
@@ -590,26 +586,21 @@ func save_mid_run():
 		push_error("❌ Błąd zapisu pliku: " + MID_RUN_SAVE_PATH)
 
 
-# --- ODCZYT GRY ---
 func load_mid_run() -> bool:
 	print("Próba wczytania stanu gry...")
 	if not FileAccess.file_exists(MID_RUN_SAVE_PATH):
-		print("Brak pliku zapisu!")
 		return false
 
 	var file = FileAccess.open(MID_RUN_SAVE_PATH, FileAccess.READ)
 	var json = JSON.new()
 	if json.parse(file.get_as_text()) != OK:
-		push_error("Błąd parsowania pliku zapisu!")
 		return false
 	
 	var data = json.get_data()
 
-	# 1. Przywracanie RunManagera (ustawienie aktualnego przejścia)
 	if data.has("iteration"):
 		RunManager._set_iteration(int(data["iteration"]))
 
-	# 2. Przywracanie Gracza
 	self.gold = int(data.get("gold", 0))
 	if player:
 		player.max_health = int(data.get("player_max_hp", 100))
@@ -618,7 +609,6 @@ func load_mid_run() -> bool:
 			player.health_bar.max_value = player.max_health
 			player.health_bar.value = player.current_health
 
-	# 3. Przywracanie Kart
 	if deck and data.has("deck"):
 		var loaded_deck = data["deck"]
 		deck.deck_data.clear()
@@ -630,11 +620,9 @@ func load_mid_run() -> bool:
 		discard.discard_data.clear()
 		for c in loaded_discard: discard.discard_data.append(int(c))
 
-	# 4. Przywracanie Mapy (Podmiana pełnego stanu)
 	if map_generator and data.has("map"):
 		var map_data = data["map"]
 
-		# Czyszczenie starej grafiki mapy (zostawiamy panel podglądu UI)
 		for child in map_generator.get_children():
 			if child == map_generator.preview_panel or child.get_parent() == map_generator.preview_panel or child is CanvasLayer:
 				continue
@@ -647,13 +635,11 @@ func load_mid_run() -> bool:
 		map_generator.map_rewards.clear()
 		map_generator.map_gold.clear()
 
-		# Wczytanie współrzędnych gracza
 		map_generator.current_node = Vector2(map_data.get("current_node_x", 0), map_data.get("current_node_y", 0))
 
 		for vn in map_data.get("visited_nodes", []):
 			map_generator.visited_nodes.append(Vector2(vn["x"], vn["y"]))
 
-		# Dekodowanie danych mapy
 		var m_nodes = map_data.get("map_nodes", {})
 		for k in m_nodes.keys():
 			map_generator.map_nodes[_str_to_vec2(k)] = int(m_nodes[k])
@@ -681,7 +667,6 @@ func load_mid_run() -> bool:
 		for k in m_gold.keys():
 			map_generator.map_gold[_str_to_vec2(k)] = int(m_gold[k])
 
-		# Przerysowanie linii i węzłów
 		map_generator.draw_map_visuals()
 
 	print("✅ Stan gry pomyślnie wczytany!")

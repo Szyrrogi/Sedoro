@@ -194,6 +194,10 @@ func finish_targeting():
 
 	# === 3. CZYSZCZENIE I AKTUALIZACJA ZMIENNYCH ===
 	if card_played:
+		
+		# --- NOWE: ZMIANA FAZY NA ZAGRYWANIE ---
+		game_manager.set_phase("Zagrywanie")
+		
 		if targeting_card.active != null and targeting_card.active != 0:
 			active = targeting_card.active
 			if has_method("set_active"):
@@ -283,6 +287,12 @@ func _on_card_right_clicked(card):
 	if card.get_parent() != hand: return
 	if game_manager.current_state != game_manager.State.PLAYER_ACTION: return
 	
+	# --- NOWE: BLOKADA ODRZUCANIA W FAZIE ZAGRYWANIA ---
+	if game_manager.current_phase_name == "Zagrywanie":
+		print("Nie można odrzucać kart w fazie zagrywania!")
+		return 
+	# ----------------------------------------------------
+	
 	print("Odrzucono kartę: ", card.name, " | +", DISCARD_MANA_GAIN, " many")
 	
 	# Clamp, żeby nie przekroczyć maks many
@@ -290,6 +300,9 @@ func _on_card_right_clicked(card):
 	
 	discard.add_to_discard(card)
 	hand.recalculate_positions()
+	
+	# ZMIANA FAZY NA ODRZUCANIE
+	game_manager.set_phase("Odrzucanie")
 
 func toggle_card_selection(card):
 	if card.is_selected:
